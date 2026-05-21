@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2d3b1f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maraîchage">
+<title>Outil d'aide · au maraîchage</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232d3b1f'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-size='55'%3E🌱%3C/text%3E%3C/svg%3E">
+
+<style>
+:root{
+  --ink:#1a1f12; --paper:#f4efe4; --paper-2:#ebe3d2; --paper-3:#ddd2bb;
+  --green-d:#2d3b1f; --green:#4a5c2f; --green-l:#6b8044;
+  --rust:#9c4a2a; --rust-l:#c26a44; --gold:#b88a2c;
+  --risk-low:#5a7a3a; --risk-mid:#c08a1a; --risk-hi:#9c2a2a;
+  --shadow:rgba(26,31,18,.08); --line:rgba(26,31,18,.12); --line-strong:rgba(26,31,18,.22);
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior:none}
+body{
+  font-family:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  background:var(--paper); color:var(--ink);
+  font-size:15px; line-height:1.5;
+  min-height:100vh; min-height:100dvh;
+  padding-bottom:env(safe-area-inset-bottom);
+  padding-top:env(safe-area-inset-top);
+  background-image:
+    radial-gradient(circle at 12% 8%, rgba(184,138,44,.06) 0, transparent 35%),
+    radial-gradient(circle at 88% 92%, rgba(74,92,47,.05) 0, transparent 40%);
+  background-attachment:fixed;
+}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.35;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.08 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  mix-blend-mode:multiply;
+}
+
+/* HEADER */
+.app-header{
+  position:sticky;top:0;z-index:50;
+  background:var(--green-d); color:var(--paper);
+  padding:14px 18px 12px;
+  box-shadow:0 1px 0 rgba(0,0,0,.15), 0 8px 20px -10px rgba(0,0,0,.3);
+}
+.app-header-top{display:flex;align-items:baseline;justify-content:space-between;gap:12px}
+.app-title{font-family:'Fraunces',serif;font-weight:800;font-size:22px;letter-spacing:-0.02em;line-height:1}
+.app-title em{font-style:italic;font-weight:500;color:#d4c896;opacity:.85}
+.app-subtitle{font-size:12px;color:#d4c896;opacity:.7;margin-top:4px;font-weight:400;letter-spacing:.02em}
+.app-tag{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#d4c896;opacity:.7;font-weight:500}
+
+.tabs{
+  display:flex;gap:0;margin-top:14px;
+  border-bottom:1px solid rgba(244,239,228,.15);
+  overflow-x:auto;scrollbar-width:none;
+  margin-left:-18px;margin-right:-18px;padding-left:18px;padding-right:18px;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:8px 0 12px;margin-right:24px;
+  font-size:13px;letter-spacing:.03em;color:rgba(244,239,228,.55);
+  background:none;border:none;cursor:pointer;font-family:inherit;font-weight:500;
+  position:relative;white-space:nowrap;transition:color .2s;
+  display:inline-flex;align-items:center;gap:6px;
+}
+.tab.active{color:var(--paper)}
+.tab.active::after{content:"";position:absolute;bottom:-1px;left:0;right:0;height:2px;background:var(--gold)}
+.tab .ico{font-size:15px}
+.tab .badge{
+  background:var(--rust);color:#fff;font-size:10px;font-weight:600;
+  padding:1px 6px;border-radius:8px;min-width:16px;text-align:center;
+}
+
+main{position:relative;z-index:2;padding:0 0 30px}
+.view{display:none;padding:18px}
+.view.active{display:block;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* Search & chips */
+.search-wrap{margin-bottom:14px;position:relative}
+.search{
+  width:100%;padding:12px 14px 12px 38px;
+  background:var(--paper-2);border:1px solid var(--line);border-radius:10px;
+  font-family:inherit;font-size:15px;color:var(--ink);outline:none;
+  transition:border-color .15s, background .15s;
+}
+.search:focus{border-color:var(--green);background:#fff}
+.search::placeholder{color:rgba(26,31,18,.45)}
+.search-ico{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;opacity:.5}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.chip{
+  padding:6px 12px;font-size:12px;background:var(--paper-2);
+  border:1px solid var(--line);border-radius:100px;cursor:pointer;
+  color:var(--ink);font-family:inherit;letter-spacing:.01em;transition:all .15s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+.chip .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.chip.active{color:#fff;border-color:transparent}
+
+/* Espèces list */
+.list{display:flex;flex-direction:column;gap:1px;background:var(--line);border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.list-item{
+  background:var(--paper);padding:14px 16px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  cursor:pointer;transition:background .12s;
+  min-height:56px;
+}
+.list-item:active{background:var(--paper-2)}
+.list-item-main{flex:1;min-width:0}
+.list-item-name{font-family:'Fraunces',serif;font-size:17px;font-weight:500;letter-spacing:-.01em}
+.list-item-fam{font-size:11px;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
+.list-item-fam .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.list-item-arrow{color:var(--rust);font-size:20px;flex-shrink:0;opacity:.5}
+.empty{padding:40px 20px;text-align:center;color:rgba(26,31,18,.5);font-style:italic}
+
+/* Fiche */
+.fiche{background:var(--paper);border:1px solid var(--line);border-radius:14px;overflow:hidden;margin-top:6px}
+.fiche-head{padding:18px 18px 16px;border-bottom:1px solid var(--line)}
+.fiche-back{display:inline-flex;align-items:center;gap:6px;font-size:14px;color:var(--rust);background:none;border:none;cursor:pointer;font-family:inherit;padding:6px 0;margin-bottom:10px;min-height:40px}
+.fiche-fam{font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:600;margin-bottom:4px;display:inline-flex;align-items:center;gap:6px}
+.fiche-fam .dot{width:8px;height:8px;border-radius:50%}
+.fiche-name{font-family:'Fraunces',serif;font-size:30px;font-weight:600;letter-spacing:-.02em;line-height:1.05}
+.fiche-section{padding:18px;border-bottom:1px solid var(--line)}
+.fiche-section:last-child{border-bottom:none}
+.fiche-section h3{
+  font-family:'Fraunces',serif;font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+  color:var(--rust);font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px;
+}
+.fiche-section h3::before{content:"";display:inline-block;width:18px;height:1px;background:var(--rust);opacity:.5}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;align-items:baseline}
+.kv dt{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:rgba(26,31,18,.55);font-weight:500;padding-top:2px}
+.kv dd{font-size:14px;line-height:1.4}
+.kv dd .num{font-family:'Fraunces',serif;font-weight:600;font-size:18px;color:var(--green-d)}
+.threat{padding:10px 0;border-bottom:1px dashed var(--line)}
+.threat:last-child{border-bottom:none}
+.threat-name{font-family:'Fraunces',serif;font-size:15px;font-weight:600;color:var(--green-d);margin-bottom:3px}
+.threat-fix{font-size:13px;color:rgba(26,31,18,.78);line-height:1.5}
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+.tag{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;padding:3px 9px;border-radius:100px;font-weight:600}
+.tag-bio{background:rgba(74,92,47,.15);color:var(--green-d)}
+.tag-agro{background:rgba(184,138,44,.2);color:#7a5c1d}
+
+/* Calculateurs */
+.calc-intro{font-family:'Fraunces',serif;font-size:22px;letter-spacing:-.015em;line-height:1.2;font-weight:500;margin-bottom:6px}
+.calc-intro em{font-style:italic;color:var(--rust)}
+.calc-sub{font-size:13px;color:rgba(26,31,18,.6);margin-bottom:18px;line-height:1.45}
+.calc-card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px}
+.calc-card h4{font-family:'Fraunces',serif;font-size:12px;letter-spacing:.15em;text-transform:uppercase;color:var(--rust);font-weight:600;margin-bottom:14px}
+.input-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field label{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,31,18,.65);font-weight:500}
+.field input,.field select{
+  padding:12px 12px;border:1px solid var(--line-strong);background:var(--paper);
+  border-radius:8px;font-family:'Fraunces',serif;font-size:18px;font-weight:500;
+  color:var(--ink);outline:none;transition:border-color .15s, background .15s;
+  -webkit-appearance:none;appearance:none;
+  min-height:48px;
+}
+.field select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%231a1f12' stroke-width='1.4' fill='none'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;padding-right:32px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:14px;font-weight:500;
+}
+.field input:focus,.field select:focus{border-color:var(--green);background:#fff}
+.surface-display{
+  text-align:center;padding:14px;
+  background:linear-gradient(180deg, #f8f3e6 0%, var(--paper-2) 100%);
+  border-radius:10px;margin-bottom:14px;border:1px solid var(--line);
+}
+.surface-display .lbl{font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:rgba(26,31,18,.55);font-weight:500;margin-bottom:4px}
+.surface-display .val{font-family:'Fraunces',serif;font-size:34px;font-weight:600;color:var(--green-d);letter-spacing:-.02em;line-height:1}
+.surface-display .unit{font-family:'IBM Plex Sans',sans-serif;font-size:14px;color:rgba(26,31,18,.6);font-weight:400;margin-left:4px}
+.result-block{border-top:1px solid var(--line);padding-top:14px;margin-top:6px}
+.result-row{display:flex;justify-content:space-between;align-items:baseline;padding:10px 0;border-bottom:1px dashed var(--line)}
+.result-row:last-child{border-bottom:none}
+.result-row .lbl{font-size:13px;color:rgba(26,31,18,.7)}
+.result-row .val{font-family:'Fraunces',serif;font-weight:600;font-size:20px;color:var(--green-d)}
+.result-row .val small{font-family:'IBM Plex Sans',sans-serif;font-size:11px;color:rgba(26,31,18,.55);font-weight:400;margin-left:3px}
+.note{
+  font-size:12px;color:rgba(26,31,18,.6);font-style:italic;margin-top:14px;line-height:1.5;
+  padding:10px 12px;background:rgba(184,138,44,.07);border-left:2px solid var(--gold);border-radius:0 6px 6px 0;
+}
+
+/* MÉTÉO / ALERTES */
+.meteo-setup{
+  background:linear-gradient(135deg, #2d3b1f 0%, #4a5c2f 100%);
+  color:var(--paper);padding:20px;border-radius:14px;margin-bottom:16px;text-align:center;
+}
+.meteo-setup h3{font-family:'Fraunces',serif;font-size:18px;font-weight:600;margin-bottom:6px}
+.meteo-setup p{font-size:13px;opacity:.85;margin-bottom:14px;line-height:1.45}
+.btn-group{display:flex;gap:8px;flex-direction:column}
+.btn{
+  padding:14px 16px;border:none;border-radius:10px;cursor:pointer;
+  font-family:inherit;font-size:14px;font-weight:600;letter-spacing:.02em;
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  transition:transform .12s;min-height:48px;
+}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--gold);color:#fff}
+.btn-secondary{background:rgba(255,255,255,.15);color:var(--paper);border:1px solid rgba(255,255,255,.25)}
+.btn-ghost{background:none;color:var(--green-d);border:1px solid var(--line-strong);font-size:12px;font-weight:500}
+.commune-input{display:flex;gap:8px;align-items:stretch;background:rgba(255,255,255,.1);padding:8px;border-radius:10px}
+.commune-input input{flex:1;background:transparent;border:none;color:var(--paper);font-family:inherit;font-size:14px;padding:6px 8px;outline:none;min-height:40px}
+.commune-input input::placeholder{color:rgba(244,239,228,.55)}
+.commune-input button{background:var(--gold);color:#fff;border:none;padding:8px 14px;border-radius:6px;font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;min-height:40px}
+.commune-results{margin-top:8px;display:flex;flex-direction:column;gap:1px;background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
+.commune-result{padding:12px;background:rgba(0,0,0,.15);text-align:left;border:none;color:var(--paper);font-family:inherit;font-size:13px;cursor:pointer;min-height:44px}
+.commune-result:active{background:rgba(0,0,0,.25)}
+.commune-result em{font-style:normal;opacity:.6;font-size:11px;margin-left:4px}
+
+/* Mes cultures */
+.cultures-section{
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:12px;padding:14px;margin-bottom:14px;
+}
+.cultures-section h4{
+  font-family:'Fraunces',serif;font-size:12px;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--green-d);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px;
+}
+.cultures-section h4 .ico{font-size:16px}
+.cultures-grid{display:flex;flex-wrap:wrap;gap:6px}
+.culture-chk{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 12px;border-radius:100px;cursor:pointer;
+  border:1px solid var(--line);background:var(--paper-2);
+  font-size:13px;font-weight:500;color:var(--ink);
+  transition:all .15s;user-select:none;
+  min-height:38px;
+}
+.culture-chk.active{background:var(--green-d);color:var(--paper);border-color:var(--green-d)}
+.culture-chk .dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.cultures-actions{display:flex;gap:8px;margin-top:10px}
+.cultures-actions button{
+  padding:6px 12px;border:1px solid var(--line);background:var(--paper);
+  border-radius:6px;font-family:inherit;font-size:11px;font-weight:500;
+  color:rgba(26,31,18,.7);cursor:pointer;
+}
+
+.location-bar{
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:12px;padding:12px 14px;margin-bottom:14px;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  min-height:56px;
+}
+.location-bar .loc{flex:1;min-width:0}
+.location-bar .loc-name{font-family:'Fraunces',serif;font-weight:600;font-size:15px;color:var(--green-d)}
+.location-bar .loc-meta{font-size:11px;color:rgba(26,31,18,.55);margin-top:1px}
+.location-bar .loc-ico{width:36px;height:36px;border-radius:8px;background:var(--green-d);color:var(--paper);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px}
+
+.forecast-strip{
+  display:grid;grid-template-columns:repeat(7,1fr);gap:4px;
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:8px;
+  margin-bottom:14px;overflow-x:auto;
+}
+.day{text-align:center;padding:8px 2px;border-radius:8px;background:var(--paper-2);display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center}
+.day.today{background:var(--green-d);color:var(--paper)}
+.day-name{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.7}
+.day.today .day-name{opacity:1}
+.day-temp{font-family:'Fraunces',serif;font-size:14px;font-weight:600;line-height:1}
+.day-temp small{font-size:10px;opacity:.6;font-weight:400;margin-left:1px}
+.day-hr{font-size:9px;opacity:.55}
+.day-rain{font-size:10px;color:var(--rust)}
+.day.today .day-rain{color:#e8a87a}
+
+.alert-summary{
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:12px;padding:14px;margin-bottom:14px;
+  display:flex;align-items:center;gap:14px;min-height:70px;
+}
+.alert-counter{
+  width:54px;height:54px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:'Fraunces',serif;font-size:24px;font-weight:600;color:#fff;
+  background:var(--risk-low);
+}
+.alert-counter.mid{background:var(--risk-mid)}
+.alert-counter.hi{background:var(--risk-hi)}
+.alert-summary-text{flex:1}
+.alert-summary-text .ttl{font-family:'Fraunces',serif;font-size:17px;font-weight:600;color:var(--green-d)}
+.alert-summary-text .sub{font-size:12px;color:rgba(26,31,18,.6);margin-top:2px;line-height:1.35}
+
+.section-title{
+  font-family:'Fraunces',serif;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--rust);font-weight:600;margin:20px 0 10px;display:flex;align-items:center;gap:10px;
+}
+.section-title::before,.section-title::after{content:"";flex:1;height:1px;background:var(--line)}
+.section-title::before{flex:0 0 14px}
+
+.alert-card{
+  background:var(--paper);border:1px solid var(--line);
+  border-radius:12px;padding:14px;margin-bottom:10px;
+  border-left:4px solid var(--risk-low);
+}
+.alert-card.mid{border-left-color:var(--risk-mid)}
+.alert-card.hi{border-left-color:var(--risk-hi);background:#fcf6ef}
+.alert-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:8px}
+.alert-card-title{font-family:'Fraunces',serif;font-size:16px;font-weight:600;color:var(--green-d);flex:1}
+.alert-card-title small{display:block;font-family:'IBM Plex Sans',sans-serif;font-size:11px;color:rgba(26,31,18,.55);font-weight:400;font-style:italic;margin-top:1px}
+.risk-badge{
+  font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 10px;border-radius:100px;color:#fff;flex-shrink:0;min-height:26px;
+  display:inline-flex;align-items:center;
+  background:var(--risk-low);
+}
+.risk-badge.mid{background:var(--risk-mid)}
+.risk-badge.hi{background:var(--risk-hi)}
+.alert-card-cultures{font-size:12px;color:var(--green);margin-bottom:8px}
+.alert-card-cultures strong{font-weight:600;color:var(--green-d)}
+.alert-card-when{
+  font-size:12px;color:rgba(26,31,18,.7);
+  padding:8px 10px;background:var(--paper-2);border-radius:6px;margin-bottom:8px;
+  display:flex;gap:8px;
+}
+.alert-card-when .key{font-weight:600;color:var(--green-d);min-width:48px}
+.alert-card-action{font-size:13px;color:var(--ink);line-height:1.5;padding-top:6px;border-top:1px dashed var(--line)}
+.alert-card-action strong{color:var(--rust);font-weight:600}
+
+.loader{text-align:center;padding:30px 18px;color:rgba(26,31,18,.5);font-style:italic}
+.loader::after{content:"…";display:inline-block;animation:dots 1.4s infinite;width:1em;text-align:left}
+@keyframes dots{0%,20%{content:""}40%{content:"."}60%{content:".."}80%,100%{content:"..."}}
+.error-box{background:#fcf0e8;border:1px solid var(--rust-l);color:var(--rust);padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.45}
+
+footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,31,18,.4)}
+
+@media (max-width:360px){
+  .app-title{font-size:18px}
+  .fiche-name{font-size:24px}
+  .input-grid{grid-template-columns:1fr}
+  .forecast-strip{grid-template-columns:repeat(7,minmax(38px,1fr))}
+}
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="app-header-top">
+    <div>
+      <h1 class="app-title">Outil d'aide<em> · au maraîchage</em></h1>
+      <div class="app-subtitle">Anticipe les potentielles maladies associées aux aléas climatiques</div>
+    </div>
+    <span class="app-tag">v3</span>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tab active" data-view="meteo"><span class="ico">🌍</span> Ma parcelle <span class="badge" id="tab-badge" style="display:none">0</span></button>
+    <button class="tab" data-view="calc-fert"><span class="ico">🧪</span> Ferti</button>
+    <button class="tab" data-view="especes"><span class="ico">🥬</span> Fiches/lég</button>
+  </nav>
+</header>
+
+<main>
+  <!-- MA PARCELLE (météo + alertes) -->
+  <section class="view active" id="view-meteo">
+    <div id="meteo-content">
+      <div id="setup-block" class="meteo-setup">
+        <h3>Configurer ma parcelle</h3>
+        <p>Localisez votre exploitation pour recevoir des alertes maladies basées sur les prévisions météo 7 jours (Open-Meteo, gratuit, sans compte).</p>
+        <div class="btn-group">
+          <button class="btn btn-primary" onclick="useGeolocation()">📍 Utiliser ma position GPS</button>
+          <div class="commune-input">
+            <input type="text" id="commune-q" placeholder="Ou saisir une commune…">
+            <button onclick="searchCommune()">Chercher</button>
+          </div>
+          <div id="commune-results"></div>
+        </div>
+        <p style="font-size:11px;margin-top:14px;opacity:.65">Position conservée localement sur votre appareil uniquement.</p>
+      </div>
+      <div id="meteo-loaded" style="display:none"></div>
+    </div>
+  </section>
+
+  <!-- FERTI -->
+  <section class="view" id="view-calc-fert">
+    <p class="calc-intro">Dosage <em>fertilisation</em> par planche</p>
+    <p class="calc-sub">Calcul des apports N·P·K et compost selon les besoins hectare ramenés à votre planche.</p>
+    <div class="calc-card">
+      <h4>Dimensions</h4>
+      <div class="input-grid">
+        <div class="field"><label>Longueur (m)</label><input type="number" id="ft-long" value="30" min="0.1" step="0.5" inputmode="decimal"></div>
+        <div class="field"><label>Largeur (m)</label><input type="number" id="ft-larg" value="1" min="0.1" step="0.1" inputmode="decimal"></div>
+      </div>
+      <div class="surface-display"><div class="lbl">Surface</div><div class="val"><span id="ft-surf">30</span><span class="unit">m²</span></div></div>
+    </div>
+    <div class="calc-card">
+      <h4>Espèce cultivée</h4>
+      <div class="field" style="margin-bottom:8px"><label>Espèce</label><select id="ft-esp"></select></div>
+      <div class="result-block" id="ft-result"></div>
+    </div>
+    <p class="note">1 U/ha = 1 kg/ha = 0,1 g/m². Compost en t/ha → kg/planche. À moduler selon analyse de sol et précédent cultural.</p>
+  </section>
+
+  <!-- FICHES/LÉG -->
+  <section class="view" id="view-especes">
+    <div id="especes-list-wrap">
+      <div class="search-wrap">
+        <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" class="search" id="search-esp" placeholder="Rechercher une espèce ou maladie…">
+      </div>
+      <div class="chips" id="family-chips"></div>
+      <div class="list" id="esp-list"></div>
+    </div>
+    <div id="esp-fiche-wrap" style="display:none"></div>
+  </section>
+</main>
+
+<footer>Données AgroBio Bretagne · GRAB · GAB · FNAB · INRAE Ephytia · Open-Meteo</footer>
+
+<script>
+const DATA = {"semis":[{"famille":"Cucurbitacées","espece":"Courge","type_semis":"Motte (godet)","recommandation":"1 graine / motte","profondeur":"2 cm"},{"famille":"Cucurbitacées","espece":"Potiron","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"2 cm"},{"famille":"Cucurbitacées","espece":"Potimarron","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"2 cm"},{"famille":"Cucurbitacées","espece":"Courgette","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"2 cm (graine pointue vers le haut)"},{"famille":"Cucurbitacées","espece":"Concombre","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"1–2 cm"},{"famille":"Cucurbitacées","espece":"Melon","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"1–2 cm"},{"famille":"Cucurbitacées","espece":"Pastèque","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"2 cm"},{"famille":"Solanacées","espece":"Tomate","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5 cm"},{"famille":"Solanacées","espece":"Aubergine","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"3 mm (graine fine)"},{"famille":"Solanacées","espece":"Poivron","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"3–5 mm"},{"famille":"Solanacées","espece":"Piment","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"3–5 mm"},{"famille":"Alliacées","espece":"Poireau","type_semis":"Ligne ou pépinière","recommandation":"Semis dense, éclaircissage / repiquage","profondeur":"1–1,5 cm"},{"famille":"Alliacées","espece":"Oignon","type_semis":"Ligne","recommandation":"Semis en ligne, éclaircir","profondeur":"1,5–2 cm"},{"famille":"Alliacées","espece":"Ciboule","type_semis":"Ligne","recommandation":"Semis en ligne, éclaircir","profondeur":"0,5–1 cm"},{"famille":"Alliacées","espece":"Échalote (semis)","type_semis":"Ligne","recommandation":"Semis fin, éclaircir","profondeur":"1–1,5 cm"},{"famille":"Choux & brassicacées","espece":"Chou cabus","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5–1 cm"},{"famille":"Choux & brassicacées","espece":"Chou frisé","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5–1 cm"},{"famille":"Choux & brassicacées","espece":"Chou-fleur","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5–1 cm"},{"famille":"Choux & brassicacées","espece":"Brocoli","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5–1 cm"},{"famille":"Choux & brassicacées","espece":"Chou de Bruxelles","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5–1 cm"},{"famille":"Choux & brassicacées","espece":"Pak choï","type_semis":"Ligne ou motte","recommandation":"Semis fin ou 1 graine/motte","profondeur":"0,5 cm"},{"famille":"Choux & brassicacées","espece":"Bok choï","type_semis":"Ligne ou motte","recommandation":"Semis fin ou 1 graine/motte","profondeur":"0,5 cm"},{"famille":"Choux & brassicacées","espece":"Navet","type_semis":"Ligne","recommandation":"Semis fin en ligne","profondeur":"0,5–1 cm"},{"famille":"Choux & brassicacées","espece":"Radis","type_semis":"Ligne","recommandation":"Semis fin en ligne","profondeur":"Ronds : 0,5–1 cm ; demi-longs : 2–3 cm"},{"famille":"Légumineuses","espece":"Pois","type_semis":"Semis direct","recommandation":"1 graine tous les 2–5 cm","profondeur":"3–4 cm"},{"famille":"Légumineuses","espece":"Pois mangetout","type_semis":"Semis direct","recommandation":"1 graine tous les 2–5 cm","profondeur":"3–4 cm"},{"famille":"Légumineuses","espece":"Fève","type_semis":"Semis direct","recommandation":"1 graine par emplacement","profondeur":"6 cm"},{"famille":"Légumineuses","espece":"Haricot nain","type_semis":"Semis direct","recommandation":"1 graine par emplacement","profondeur":"3 cm"},{"famille":"Légumineuses","espece":"Haricot à rame","type_semis":"Semis direct","recommandation":"1 graine par emplacement","profondeur":"3 cm"},{"famille":"Légumineuses","espece":"Pois chiche","type_semis":"Semis direct","recommandation":"1 graine par emplacement","profondeur":"3–5 cm"},{"famille":"Légumes-feuilles","espece":"Laitue","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5 cm (ne pas enterrer trop)"},{"famille":"Légumes-feuilles","espece":"Batavia","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5 cm"},{"famille":"Légumes-feuilles","espece":"Feuille de chêne","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5 cm"},{"famille":"Légumes-feuilles","espece":"Mâche","type_semis":"Motte","recommandation":"9 graine / motte","profondeur":"0,5–1 cm"},{"famille":"Légumes-feuilles","espece":"Épinard","type_semis":"Motte","recommandation":"6 graine / motte","profondeur":"1–2 cm"},{"famille":"Légumes-feuilles","espece":"Roquette","type_semis":"Motte","recommandation":"5 graine / motte","profondeur":"0,5 cm"},{"famille":"Racines","espece":"Carotte","type_semis":"Ligne","recommandation":"Semis très fin, éclaircir","profondeur":"1 cm (plus profond en été)"},{"famille":"Racines","espece":"Betterave","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"2 cm"},{"famille":"Racines","espece":"Betterave","type_semis":"Ligne","recommandation":"Semis en ligne (glomérule)","profondeur":"2 cm"},{"famille":"Racines","espece":"Blette","type_semis":"Ligne","recommandation":"Semis en ligne (glomérule)","profondeur":"2 cm"},{"famille":"Racines","espece":"Panais","type_semis":"Ligne","recommandation":"Semis fin, levée lente","profondeur":"1,5–2 cm"},{"famille":"Racines","espece":"Radis noir","type_semis":"Ligne","recommandation":"Semis en ligne","profondeur":"1–2 cm"},{"famille":"Autres","espece":"Maïs doux","type_semis":"Semis direct","recommandation":"1 graine par emplacement","profondeur":"3–5 cm"},{"famille":"Autres","espece":"Fenouil","type_semis":"Ligne ou motte","recommandation":"Semis fin ou 1 graine/motte","profondeur":"0,5–1 cm"},{"famille":"Autres","espece":"Céleri branche","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"Surface (non enterré)"},{"famille":"Autres","espece":"Céleri-rave","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"Surface"},{"famille":"Autres","espece":"Chicorée","type_semis":"Motte","recommandation":"1 graine / motte","profondeur":"0,5–1 cm"}],"plantation":[{"famille":"Cucurbitacées","espece":"Courge","type_semis":"Motte (godet)","densite_agro":"90 (entre rang)×120 (sur le rang) cm","plants_m2_agro_txt":"1 plant/m²","densite_bio":"75 × 75 cm","plants_m2_bio_txt":"1 plant/m²","agro_min":1.0,"agro_max":1.0,"bio_min":1.0,"bio_max":1.0,"rangs_agro":"1 rang","rangs_bio":"1 rang"},{"famille":"Cucurbitacées","espece":"Potiron","type_semis":"Motte","densite_agro":"90×120 cm","plants_m2_agro_txt":"1 plant/m²","densite_bio":"75 × 75 cm","plants_m2_bio_txt":"1 plant/m²","agro_min":1.0,"agro_max":1.0,"bio_min":1.0,"bio_max":1.0,"rangs_agro":"1 rang","rangs_bio":"1 rang"},{"famille":"Cucurbitacées","espece":"Potimarron","type_semis":"Motte","densite_agro":"90×120 cm","plants_m2_agro_txt":"1 plant/m²","densite_bio":"75 × 75 cm","plants_m2_bio_txt":"1 plant/m²","agro_min":1.0,"agro_max":1.0,"bio_min":1.0,"bio_max":1.0,"rangs_agro":"1 rang","rangs_bio":"1 rang"},{"famille":"Cucurbitacées","espece":"Courgette","type_semis":"Motte","densite_agro":"60×130 cm","plants_m2_agro_txt":"1 plant/m²","densite_bio":"50 × 50 cm","plants_m2_bio_txt":"4 plants/m²","agro_min":1.0,"agro_max":1.0,"bio_min":4.0,"bio_max":4.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Cucurbitacées","espece":"Concombre","type_semis":"Motte","densite_agro":"60×125 cm ou 70×150 cm","plants_m2_agro_txt":"1 à 2 plants/m²","densite_bio":"30 × 45 cm","plants_m2_bio_txt":"7 plants/m²","agro_min":1.0,"agro_max":2.0,"bio_min":7.0,"bio_max":7.0,"rangs_agro":"1 rang","rangs_bio":"3 rangs"},{"famille":"Cucurbitacées","espece":"Melon","type_semis":"Motte","densite_agro":"60×180 cm plein champ; 50×160 cm sous abri","plants_m2_agro_txt":"1 plant/m²","densite_bio":"50 × 50 cm","plants_m2_bio_txt":"4 plants/m²","agro_min":1.0,"agro_max":1.0,"bio_min":4.0,"bio_max":4.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Cucurbitacées","espece":"Pastèque","type_semis":"Motte","densite_agro":"70×180 cm","plants_m2_agro_txt":"1 plant/m²","densite_bio":"50 × 50 cm","plants_m2_bio_txt":"4 plants/m²","agro_min":1.0,"agro_max":1.0,"bio_min":4.0,"bio_max":4.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Solanacées","espece":"Tomate","type_semis":"Motte","densite_agro":"45×100 cm plein champ; 45×90 cm sous abri","plants_m2_agro_txt":"2 à 3 plants/m²","densite_bio":"50 × 50 cm","plants_m2_bio_txt":"4 plants/m²","agro_min":2.0,"agro_max":3.0,"bio_min":4.0,"bio_max":4.0,"rangs_agro":"2 rangs","rangs_bio":"2 rangs"},{"famille":"Solanacées","espece":"Aubergine","type_semis":"Motte","densite_agro":"50×75 cm plein champ; 40-50×110 cm sous abri","plants_m2_agro_txt":"1 à 3 plants/m²","densite_bio":"35 × 50 cm","plants_m2_bio_txt":"5 plants/m²","agro_min":1.0,"agro_max":3.0,"bio_min":5.0,"bio_max":5.0,"rangs_agro":"1 à 2 rangs","rangs_bio":"2 rangs"},{"famille":"Solanacées","espece":"Poivron","type_semis":"Motte","densite_agro":"45×75 cm","plants_m2_agro_txt":"3 plants/m²","densite_bio":"35 × 50 cm","plants_m2_bio_txt":"5 plants/m²","agro_min":3.0,"agro_max":3.0,"bio_min":5.0,"bio_max":5.0,"rangs_agro":"2 rangs","rangs_bio":"2 rangs"},{"famille":"Solanacées","espece":"Piment","type_semis":"Motte","densite_agro":"50×75 cm","plants_m2_agro_txt":"3 plants/m²","densite_bio":"35 × 50 cm","plants_m2_bio_txt":"5 plants/m²","agro_min":3.0,"agro_max":3.0,"bio_min":5.0,"bio_max":5.0,"rangs_agro":"2 rangs","rangs_bio":"2 rangs"},{"famille":"Alliacées","espece":"Poireau","type_semis":"Ligne ou pépinière","densite_agro":"10×45 cm","plants_m2_agro_txt":"200 000 plants/ha (soit 20 plants/m²)","densite_bio":"10 × 25 cm","plants_m2_bio_txt":"40 plants/m²","agro_min":20.0,"agro_max":20.0,"bio_min":40.0,"bio_max":40.0,"rangs_agro":"3 rangs","rangs_bio":"4 rangs"},{"famille":"Alliacées","espece":"Oignon","type_semis":"Ligne","densite_agro":"15×30 cm","plants_m2_agro_txt":"22 plants/m²","densite_bio":"10 × 20 cm","plants_m2_bio_txt":"50 plants/m²","agro_min":22.0,"agro_max":22.0,"bio_min":50.0,"bio_max":50.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Alliacées","espece":"Ciboule","type_semis":"Ligne","densite_agro":"30 plants/m linéaire, 50 cm entre rangs","plants_m2_agro_txt":"60 plants/m² (30 plants/m linéaire × 2 rangs/m)","densite_bio":"10 × 20 cm","plants_m2_bio_txt":"50 plants/m²","agro_min":60.0,"agro_max":60.0,"bio_min":50.0,"bio_max":50.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Alliacées","espece":"Échalote (semis)","type_semis":"Ligne","densite_agro":"200 à 250 graines/m²","plants_m2_agro_txt":"200 à 250 plants/m² (avant éclaircissage)","densite_bio":"10 × 20 cm","plants_m2_bio_txt":"50 plants/m²","agro_min":200.0,"agro_max":250.0,"bio_min":50.0,"bio_max":50.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Choux & brassicacées","espece":"Chou cabus","type_semis":"Motte","densite_agro":"45 × 75 cm","plants_m2_agro_txt":"1 à 2 plants/m²","densite_bio":"45 × 45 cm","plants_m2_bio_txt":"4 plants/m²","agro_min":1.0,"agro_max":2.0,"bio_min":4.0,"bio_max":4.0,"rangs_agro":"2 rangs","rangs_bio":"2 rangs"},{"famille":"Choux & brassicacées","espece":"Chou frisé","type_semis":"Motte","densite_agro":"50×50 cm","plants_m2_agro_txt":"40 000 plants/ha (soit 4 plants/m²)","densite_bio":"20 × 20 cm","plants_m2_bio_txt":"25 plants/m²","agro_min":4.0,"agro_max":4.0,"bio_min":25.0,"bio_max":25.0,"rangs_agro":"2 rangs","rangs_bio":"5 rangs"},{"famille":"Choux & brassicacées","espece":"Chou-fleur","type_semis":"Motte","densite_agro":"45 × 75 cm","plants_m2_agro_txt":"1 à 2 plants/m²","densite_bio":"38 × 38 cm","plants_m2_bio_txt":"6 plants/m²","agro_min":1.0,"agro_max":2.0,"bio_min":6.0,"bio_max":6.0,"rangs_agro":"1 rang","rangs_bio":"3 rangs"},{"famille":"Choux & brassicacées","espece":"Brocoli","type_semis":"Motte","densite_agro":"70×50 cm","plants_m2_agro_txt":"3 plants/m²","densite_bio":"30 × 30 cm","plants_m2_bio_txt":"11 plants/m²","agro_min":3.0,"agro_max":3.0,"bio_min":11.0,"bio_max":11.0,"rangs_agro":"2 rangs","rangs_bio":"3 rangs"},{"famille":"Choux & brassicacées","espece":"Chou de Bruxelles","type_semis":"Motte","densite_agro":"4 plants/ml","plants_m2_agro_txt":"2 à 3 plants/m²","densite_bio":"45 × 45 cm","plants_m2_bio_txt":"4 plants/m²","agro_min":2.0,"agro_max":3.0,"bio_min":4.0,"bio_max":4.0,"rangs_agro":"1 à 2 rangs","rangs_bio":"2 rangs"},{"famille":"Choux & brassicacées","espece":"Pak choï","type_semis":"Motte","densite_agro":"30 × 30 cm","plants_m2_agro_txt":"11 à 12 plants/m²","densite_bio":"20 × 20 cm","plants_m2_bio_txt":"25 plants/m²","agro_min":11.0,"agro_max":12.0,"bio_min":25.0,"bio_max":25.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Choux & brassicacées","espece":"Bok choï","type_semis":"Motte","densite_agro":"30 × 40 cm","plants_m2_agro_txt":"11 à 12 plants/m²","densite_bio":"20 × 20 cm","plants_m2_bio_txt":"25 plants/m²","agro_min":11.0,"agro_max":12.0,"bio_min":25.0,"bio_max":25.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Choux & brassicacées","espece":"Navet","type_semis":"Ligne","densite_agro":"10×30 cm ou 5×10 cm","plants_m2_agro_txt":"33 plants/m² (10×30) ou 200 plants/m² (5×10)","densite_bio":"10 × 10 cm","plants_m2_bio_txt":"100 plants/m²","agro_min":33.0,"agro_max":200.0,"bio_min":100.0,"bio_max":100.0,"rangs_agro":"4 rangs","rangs_bio":"9 rangs"},{"famille":"Choux & brassicacées","espece":"Radis","type_semis":"Ligne","densite_agro":"10×30 cm","plants_m2_agro_txt":"667 plants/m²","densite_bio":"5 × 5 cm","plants_m2_bio_txt":"400 plants/m²","agro_min":667.0,"agro_max":667.0,"bio_min":400.0,"bio_max":400.0,"rangs_agro":"5 rangs","rangs_bio":"9 rangs"},{"famille":"Légumineuses","espece":"Pois","type_semis":"Semis direct","densite_agro":"20×70 cm ou 2 à 3 rangs rapprochés de 30-40 cm × 70 cm; 100 plants/m²","plants_m2_agro_txt":"100 plants/m² (semis dense, 1 graine tous les 2–5 cm sur le rang)","densite_bio":"5 × 45 cm","plants_m2_bio_txt":"44 plants/m²","agro_min":100.0,"agro_max":100.0,"bio_min":44.0,"bio_max":44.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Légumineuses","espece":"Pois mangetout","type_semis":"Semis direct","densite_agro":"20×70 cm ou 2 à 3 rangs rapprochés de 30-40 cm × 70 cm","plants_m2_agro_txt":"100 plants/m² (semis dense, 1 graine tous les 2–5 cm sur le rang)","densite_bio":"5 × 45 cm","plants_m2_bio_txt":"44 plants/m²","agro_min":100.0,"agro_max":100.0,"bio_min":44.0,"bio_max":44.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Légumineuses","espece":"Fève","type_semis":"Semis direct","densite_agro":"10×35 cm","plants_m2_agro_txt":"29 plants/m²","densite_bio":"10 × 45 cm","plants_m2_bio_txt":"22 plants/m²","agro_min":29.0,"agro_max":29.0,"bio_min":22.0,"bio_max":22.0,"rangs_agro":"2 rangs","rangs_bio":"2 rangs"},{"famille":"Légumineuses","espece":"Haricot nain","type_semis":"Semis direct","densite_agro":"4 à 5 mottes/m²","plants_m2_agro_txt":"12 à 15 plants/m²","densite_bio":"10 × 45 cm","plants_m2_bio_txt":"22 plants/m²","agro_min":12.0,"agro_max":15.0,"bio_min":22.0,"bio_max":22.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Légumineuses","espece":"Haricot à rame","type_semis":"Semis direct","densite_agro":"16 plants/m²","plants_m2_agro_txt":"15 à 22 plants/m²","densite_bio":"10 × 45 cm","plants_m2_bio_txt":"22 plants/m²","agro_min":15.0,"agro_max":22.0,"bio_min":22.0,"bio_max":22.0,"rangs_agro":"1 rang","rangs_bio":"2 rangs"},{"famille":"Légumineuses","espece":"Pois chiche","type_semis":"Semis direct","densite_agro":"100 à 150 kg/ha","plants_m2_agro_txt":"28 à 43 plants/m² (100 à 150 kg/ha, PMG 350 g)","densite_bio":"10 × 20 cm","plants_m2_bio_txt":"50 plants/m²","agro_min":28.0,"agro_max":43.0,"bio_min":50.0,"bio_max":50.0,"rangs_agro":"2 rangs","rangs_bio":"5 rangs"},{"famille":"Légumes-feuilles","espece":"Laitue","type_semis":"Motte","densite_agro":"25×30 cm","plants_m2_agro_txt":"14 plants/m²","densite_bio":"25 × 25 cm","plants_m2_bio_txt":"16 plants/m²","agro_min":14.0,"agro_max":14.0,"bio_min":16.0,"bio_max":16.0,"rangs_agro":"3 rangs","rangs_bio":"4 rangs"},{"famille":"Légumes-feuilles","espece":"Batavia","type_semis":"Motte","densite_agro":"25×30 cm","plants_m2_agro_txt":"14 plants/m²","densite_bio":"25 × 25 cm","plants_m2_bio_txt":"16 plants/m²","agro_min":14.0,"agro_max":14.0,"bio_min":16.0,"bio_max":16.0,"rangs_agro":"3 rangs","rangs_bio":"4 rangs"},{"famille":"Légumes-feuilles","espece":"Feuille de chêne","type_semis":"Motte","densite_agro":"25×30 cm","plants_m2_agro_txt":"14 plants/m²","densite_bio":"15 × 15 cm","plants_m2_bio_txt":"44 plants/m²","agro_min":14.0,"agro_max":14.0,"bio_min":44.0,"bio_max":44.0,"rangs_agro":"3 rangs","rangs_bio":"7 rangs"},{"famille":"Légumes-feuilles","espece":"Mâche","type_semis":"Motte","densite_agro":"20×20 cm","plants_m2_agro_txt":"40 plants/m² plein champ ; 32 plants/m² sous abri","densite_bio":"10 × 10 cm","plants_m2_bio_txt":"100 plants/m²","agro_min":32.0,"agro_max":40.0,"bio_min":100.0,"bio_max":100.0,"rangs_agro":"3 rangs","rangs_bio":"9 rangs"},{"famille":"Légumes-feuilles","espece":"Épinard","type_semis":"Motte","densite_agro":"25×25 cm","plants_m2_agro_txt":"16 plants/m²","densite_bio":"20 × 20 cm","plants_m2_bio_txt":"25 plants/m²","agro_min":16.0,"agro_max":16.0,"bio_min":25.0,"bio_max":25.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Légumes-feuilles","espece":"Roquette","type_semis":"Motte","densite_agro":"15×25 cm","plants_m2_agro_txt":"28 plants/m²","densite_bio":"10 × 10 cm","plants_m2_bio_txt":"100 plants/m²","agro_min":28.0,"agro_max":28.0,"bio_min":100.0,"bio_max":100.0,"rangs_agro":"4 rangs","rangs_bio":"9 rangs"},{"famille":"Racines","espece":"Carotte","type_semis":"Ligne","densite_agro":"3 à 8 × 30 cm; 60 à 105 graines/ml","plants_m2_agro_txt":"200 à 350 plants/m² (60 à 105 graines/ml × 3,3 rangs/m)","densite_bio":"3 × 20 cm","plants_m2_bio_txt":"166 plants/m²","agro_min":200.0,"agro_max":350.0,"bio_min":166.0,"bio_max":166.0,"rangs_agro":"4 rangs","rangs_bio":"5 rangs"},{"famille":"Racines","espece":"Betterave","type_semis":"Motte","densite_agro":"15 à 18 pieds/ml","plants_m2_agro_txt":"35 à 60 plants/m²","densite_bio":"5 × 20 cm","plants_m2_bio_txt":"100 plants/m²","agro_min":35.0,"agro_max":60.0,"bio_min":100.0,"bio_max":100.0,"rangs_agro":"3 à 4 rangs","rangs_bio":"5 rangs"},{"famille":"Racines","espece":"Betterave","type_semis":"Ligne","densite_agro":"15 à 18 pieds/ml; 35 à 60 plants/m²","plants_m2_agro_txt":"35 à 60 plants/m²","densite_bio":"5 × 20 cm","plants_m2_bio_txt":"100 plants/m²","agro_min":35.0,"agro_max":60.0,"bio_min":100.0,"bio_max":100.0,"rangs_agro":"3 à 4 rangs","rangs_bio":"5 rangs"},{"famille":"Racines","espece":"Blette","type_semis":"Ligne","densite_agro":"45×40 cm","plants_m2_agro_txt":"6 plants/m²","densite_bio":"20 × 25 cm","plants_m2_bio_txt":"20 plants/m²","agro_min":6.0,"agro_max":6.0,"bio_min":20.0,"bio_max":20.0,"rangs_agro":"2 rangs","rangs_bio":"4 rangs"},{"famille":"Racines","espece":"Panais","type_semis":"Ligne","densite_agro":"10 à 12 × 25 à 50 cm","plants_m2_agro_txt":"17 à 40 plants/m² (selon espacement)","densite_bio":"10 × 20 cm","plants_m2_bio_txt":"50 plants/m²","agro_min":17.0,"agro_max":40.0,"bio_min":50.0,"bio_max":50.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Racines","espece":"Radis noir","type_semis":"Ligne","densite_agro":"5 × 20 cm","plants_m2_agro_txt":"100 à 222 plants/m² (selon espacement)","densite_bio":"10 × 20 cm","plants_m2_bio_txt":"50 plants/m²","agro_min":100.0,"agro_max":222.0,"bio_min":50.0,"bio_max":50.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Autres","espece":"Maïs doux","type_semis":"Semis direct","densite_agro":"5×30 cm ou 20 à 30 cm × 50 cm","plants_m2_agro_txt":"7 à 10 plants/m² (espacement final 20–30 × 50 cm)","densite_bio":"25 × 25 cm","plants_m2_bio_txt":"16 plants/m²","agro_min":7.0,"agro_max":10.0,"bio_min":16.0,"bio_max":16.0,"rangs_agro":"2 rangs","rangs_bio":"4 rangs"},{"famille":"Autres","espece":"Fenouil","type_semis":"Ligne ou motte","densite_agro":"30×35 cm plein champ ; sous abri à plus serré","plants_m2_agro_txt":"10 plants/m² plein champ ; 14 plants/m² sous abri","densite_bio":"25 × 25 cm","plants_m2_bio_txt":"16 plants/m²","agro_min":10.0,"agro_max":14.0,"bio_min":16.0,"bio_max":16.0,"rangs_agro":"3 rangs","rangs_bio":"4 rangs"},{"famille":"Autres","espece":"Céleri branche","type_semis":"Motte","densite_agro":"20 × 30 cm","plants_m2_agro_txt":"17 à 20 plants/m²","densite_bio":"20 × 20 cm","plants_m2_bio_txt":"25 plants/m²","agro_min":17.0,"agro_max":20.0,"bio_min":25.0,"bio_max":25.0,"rangs_agro":"3 rangs","rangs_bio":"5 rangs"},{"famille":"Autres","espece":"Céleri-rave","type_semis":"Motte","densite_agro":"50  × 60 cm","plants_m2_agro_txt":"4 à 6 plants/m²","densite_bio":"25 × 25 cm","plants_m2_bio_txt":"16 plants/m²","agro_min":4.0,"agro_max":6.0,"bio_min":16.0,"bio_max":16.0,"rangs_agro":"2 rangs","rangs_bio":"4 rangs"},{"famille":"Autres","espece":"Chicorée","type_semis":"Motte","densite_agro":"30×30 cm","plants_m2_agro_txt":"11 plants/m²","densite_bio":"30 × 30 cm","plants_m2_bio_txt":"11 plants/m²","agro_min":11.0,"agro_max":11.0,"bio_min":11.0,"bio_max":11.0,"rangs_agro":"3 rangs","rangs_bio":"3 rangs"}],"fertilite":[{"famille":"Cucurbitacées","espece":"Courge","fertilisation":"N 120 / P 60 / K 100 U/ha","compost":"30–40 t/ha fumier composté","commentaires":"éviter excès d'azote (gêne conservation)","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":100.0,"K_max":100.0,"Comp_min":30.0,"Comp_max":40.0},{"famille":"Cucurbitacées","espece":"Potiron","fertilisation":"N 120 / P 60 / K 100 U/ha","compost":"30–40 t/ha fumier composté","commentaires":"","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":100.0,"K_max":100.0,"Comp_min":30.0,"Comp_max":40.0},{"famille":"Cucurbitacées","espece":"Potimarron","fertilisation":"N 120 / P 60 / K 100 U/ha","compost":"30–40 t/ha fumier composté","commentaires":"","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":100.0,"K_max":100.0,"Comp_min":30.0,"Comp_max":40.0},{"famille":"Cucurbitacées","espece":"Courgette","fertilisation":"N 220 / P 110 / K 100 U/ha","compost":"20–30 t/ha compost demi-mûr","commentaires":"(très gourmande)","N_min":220.0,"N_max":220.0,"P_min":110.0,"P_max":110.0,"K_min":100.0,"K_max":100.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Cucurbitacées","espece":"Concombre","fertilisation":"Gourmand N/P/K","compost":"fumure de fond 20–30 t/ha fumier composté ; supporte fumier frais en fond de trou","commentaires":"Gourmand N/P/K","N_min":0.0,"N_max":0.0,"P_min":0.0,"P_max":0.0,"K_min":0.0,"K_max":0.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Cucurbitacées","espece":"Melon","fertilisation":"PC : N 80–100 / P 80–100 / K 100–150 U/ha ; Abri : N 120–150 / P 100–150 / K 150–220 U/ha","compost":"tourteau de ricin + patenkali","commentaires":"","N_min":80.0,"N_max":150.0,"P_min":80.0,"P_max":150.0,"K_min":100.0,"K_max":220.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Cucurbitacées","espece":"Pastèque","fertilisation":"PC : N 80–100 / P 80–100 / K 100–150 U/ha ; Abri : N 120–150 / P 100–150 / K 150–220 U/ha","compost":"fumier composté 20–30 t/ha","commentaires":"","N_min":80.0,"N_max":100.0,"P_min":80.0,"P_max":100.0,"K_min":150.0,"K_max":150.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Solanacées","espece":"Tomate","fertilisation":"N 200 / P 100 / K 300 U/ha","compost":"20–30 t/ha fumier mûr OU 5 t/ha compost du commerce","commentaires":"(gourmande)","N_min":200.0,"N_max":200.0,"P_min":100.0,"P_max":100.0,"K_min":300.0,"K_max":300.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Solanacées","espece":"Aubergine","fertilisation":"N 200 / P 50 / K 200 U/ha","compost":"30–40 t/ha compost mûr","commentaires":"","N_min":200.0,"N_max":200.0,"P_min":50.0,"P_max":50.0,"K_min":200.0,"K_max":200.0,"Comp_min":30.0,"Comp_max":40.0},{"famille":"Solanacées","espece":"Poivron","fertilisation":"N 130 / P 150 / K 270 U/ha","compost":"50 t/ha fumier","commentaires":"","N_min":130.0,"N_max":130.0,"P_min":150.0,"P_max":150.0,"K_min":270.0,"K_max":270.0,"Comp_min":50.0,"Comp_max":50.0},{"famille":"Solanacées","espece":"Piment","fertilisation":"N 130 / P 150 / K 270 U/ha","compost":"50 t/ha fumier","commentaires":"","N_min":130.0,"N_max":130.0,"P_min":150.0,"P_max":150.0,"K_min":270.0,"K_max":270.0,"Comp_min":50.0,"Comp_max":50.0},{"famille":"Alliacées","espece":"Poireau","fertilisation":"N 200 / P 80 / K 250 U/ha","compost":"40–50 t/ha fumier bovin décomposé","commentaires":"","N_min":200.0,"N_max":200.0,"P_min":80.0,"P_max":80.0,"K_min":250.0,"K_max":250.0,"Comp_min":40.0,"Comp_max":50.0},{"famille":"Alliacées","espece":"Oignon","fertilisation":"N 100 / P 70 / K 120 U/ha","compost":"engrais organique OU compost bien mûr","commentaires":"ÉVITER fumure fraîche ou excès N (favorise maladies)","N_min":100.0,"N_max":100.0,"P_min":70.0,"P_max":70.0,"K_min":120.0,"K_max":120.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Alliacées","espece":"Ciboule","fertilisation":"N 100 / P 70 / K 120 U/ha","compost":"engrais organique bien mûr","commentaires":"","N_min":100.0,"N_max":100.0,"P_min":70.0,"P_max":70.0,"K_min":120.0,"K_max":120.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Alliacées","espece":"Échalote (semis)","fertilisation":"N 100 / P 70 / K 120 U/ha","compost":"engrais organique bien mûr","commentaires":"","N_min":100.0,"N_max":100.0,"P_min":70.0,"P_max":70.0,"K_min":120.0,"K_max":120.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Choux & brassicacées","espece":"Chou cabus","fertilisation":"N 250 / P 80 / K 300 U/ha","compost":"30–50 t/ha fumier composté","commentaires":"(très gourmand) ; besoins en S et B","N_min":250.0,"N_max":250.0,"P_min":80.0,"P_max":80.0,"K_min":300.0,"K_max":300.0,"Comp_min":30.0,"Comp_max":50.0},{"famille":"Choux & brassicacées","espece":"Chou frisé","fertilisation":"N 200 / P 70 / K 250 U/ha","compost":"30 t/ha compost mûr","commentaires":"","N_min":200.0,"N_max":200.0,"P_min":70.0,"P_max":70.0,"K_min":250.0,"K_max":250.0,"Comp_min":30.0,"Comp_max":30.0},{"famille":"Choux & brassicacées","espece":"Chou-fleur","fertilisation":"N 250 / P 100 / K 300 U/ha ; apport bore essentiel","compost":"40–50 t/ha fumier composté","commentaires":"","N_min":250.0,"N_max":250.0,"P_min":100.0,"P_max":100.0,"K_min":300.0,"K_max":300.0,"Comp_min":40.0,"Comp_max":50.0},{"famille":"Choux & brassicacées","espece":"Brocoli","fertilisation":"N 200 / P 80 / K 250 U/ha","compost":"30–40 t/ha fumier composté","commentaires":"","N_min":200.0,"N_max":200.0,"P_min":80.0,"P_max":80.0,"K_min":250.0,"K_max":250.0,"Comp_min":30.0,"Comp_max":40.0},{"famille":"Choux & brassicacées","espece":"Chou de Bruxelles","fertilisation":"N 200 / P 80 / K 250 U/ha ; besoins élevés en bore","compost":"30 t/ha fumier composté","commentaires":"","N_min":200.0,"N_max":200.0,"P_min":80.0,"P_max":80.0,"K_min":250.0,"K_max":250.0,"Comp_min":30.0,"Comp_max":30.0},{"famille":"Choux & brassicacées","espece":"Pak choï","fertilisation":"Moyennement gourmand","compost":"20–30 t/ha compost bien mûr (≈ N 120 / P 60 / K 180 U/ha)","commentaires":"","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":180.0,"K_max":180.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Choux & brassicacées","espece":"Bok choï","fertilisation":"Moyennement gourmand","compost":"20–30 t/ha compost bien mûr (≈ N 120 / P 60 / K 180 U/ha)","commentaires":"","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":180.0,"K_max":180.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Choux & brassicacées","espece":"Navet","fertilisation":"N 70 / P 50 / K 140 U/ha","compost":"","commentaires":"printemps : engrais à minéralisation rapide ; hiver : reliquats suffisants","N_min":70.0,"N_max":70.0,"P_min":50.0,"P_max":50.0,"K_min":140.0,"K_max":140.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Choux & brassicacées","espece":"Radis","fertilisation":"N 70 / P 50 / K 120 U/ha","compost":"compost mûr si sol pauvre","commentaires":"","N_min":70.0,"N_max":70.0,"P_min":50.0,"P_max":50.0,"K_min":120.0,"K_max":120.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumineuses","espece":"Pois","fertilisation":"PAS d'apport azoté (fixe N)","compost":"si nécessaire : compost très mûr","commentaires":"","N_min":0.0,"N_max":0.0,"P_min":0.0,"P_max":0.0,"K_min":0.0,"K_max":0.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumineuses","espece":"Pois mangetout","fertilisation":"PAS d'apport azoté (légumineuse) ; sol frais suffit","compost":"","commentaires":"","N_min":0.0,"N_max":0.0,"P_min":0.0,"P_max":0.0,"K_min":0.0,"K_max":0.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumineuses","espece":"Fève","fertilisation":"PAS d'apport conseillé","compost":"","commentaires":"","N_min":0.0,"N_max":0.0,"P_min":0.0,"P_max":0.0,"K_min":0.0,"K_max":0.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumineuses","espece":"Haricot nain","fertilisation":"N 20–30 / P 50–80 / K 120–150 U/ha","compost":"compost bien évolué à l'automne précédent ; MO fraîche déconseillée","commentaires":"Peu gourmand","N_min":20.0,"N_max":30.0,"P_min":50.0,"P_max":80.0,"K_min":120.0,"K_max":150.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumineuses","espece":"Haricot à rame","fertilisation":"N 20–30 / P 50–80 / K 120–150 U/ha","compost":"compost à l'automne précédent","commentaires":"","N_min":20.0,"N_max":30.0,"P_min":50.0,"P_max":80.0,"K_min":120.0,"K_max":150.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumineuses","espece":"Pois chiche","fertilisation":"","compost":"","commentaires":"","N_min":0.0,"N_max":0.0,"P_min":0.0,"P_max":0.0,"K_min":0.0,"K_max":0.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumes-feuilles","espece":"Laitue","fertilisation":"Moy. gourmande ; N 80–120 / P 40 / K 150 U/ha","compost":"20–30 t/ha compost mûr","commentaires":"sensible nécrose marginale (Ca)","N_min":80.0,"N_max":120.0,"P_min":40.0,"P_max":40.0,"K_min":150.0,"K_max":150.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Légumes-feuilles","espece":"Batavia","fertilisation":"N 80–120 / P 40 / K 150 U/ha","compost":"20–30 t/ha compost mûr","commentaires":"","N_min":80.0,"N_max":120.0,"P_min":40.0,"P_max":40.0,"K_min":150.0,"K_max":150.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Légumes-feuilles","espece":"Feuille de chêne","fertilisation":"N 80–120 / P 40 / K 150 U/ha","compost":"20 t/ha compost mûr","commentaires":"","N_min":80.0,"N_max":120.0,"P_min":40.0,"P_max":40.0,"K_min":150.0,"K_max":150.0,"Comp_min":20.0,"Comp_max":20.0},{"famille":"Légumes-feuilles","espece":"Mâche","fertilisation":"Exportation N 30 / P 15 / K 50 U/ha","compost":"","commentaires":"(très peu exigeante) ; reliquats de la culture d'été généralement suffisants","N_min":30.0,"N_max":30.0,"P_min":15.0,"P_max":15.0,"K_min":50.0,"K_max":50.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Légumes-feuilles","espece":"Épinard","fertilisation":"N 120–150 / P 50 / K 150 U/ha","compost":"20–30 t/ha compost mûr","commentaires":"(gourmand en N) ; sensible carences Fe et Mn","N_min":120.0,"N_max":150.0,"P_min":50.0,"P_max":50.0,"K_min":150.0,"K_max":150.0,"Comp_min":20.0,"Comp_max":30.0},{"famille":"Légumes-feuilles","espece":"Roquette","fertilisation":"N 50–80 / P 30 / K 80 U/ha (cycles courts)","compost":"15–20 t/ha compost mûr","commentaires":"(cycles courts)","N_min":50.0,"N_max":80.0,"P_min":30.0,"P_max":30.0,"K_min":80.0,"K_max":80.0,"Comp_min":15.0,"Comp_max":20.0},{"famille":"Racines","espece":"Carotte","fertilisation":"N 66 / P 35 / K 105 U/ha","compost":"20 t/ha fumier OU compost mûr, 1,5 à 2 mois AVANT semis","commentaires":"éviter fumure fraîche (racines fourchues)","N_min":66.0,"N_max":66.0,"P_min":35.0,"P_max":35.0,"K_min":105.0,"K_max":105.0,"Comp_min":20.0,"Comp_max":20.0},{"famille":"Racines","espece":"Betterave","fertilisation":"N 120 / P 60 / K 200 U/ha","compost":"25–30 t/ha fumier composté","commentaires":"besoins élevés en bore","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":200.0,"K_max":200.0,"Comp_min":25.0,"Comp_max":30.0},{"famille":"Racines","espece":"Betterave","fertilisation":"N 120 / P 60 / K 200 U/ha","compost":"25–30 t/ha fumier composté","commentaires":"besoins élevés en bore","N_min":120.0,"N_max":120.0,"P_min":60.0,"P_max":60.0,"K_min":200.0,"K_max":200.0,"Comp_min":25.0,"Comp_max":30.0},{"famille":"Racines","espece":"Blette","fertilisation":"N 150 / P 50 / K 180 U/ha","compost":"25 t/ha compost mûr","commentaires":"Moy. gourmande","N_min":150.0,"N_max":150.0,"P_min":50.0,"P_max":50.0,"K_min":180.0,"K_max":180.0,"Comp_min":25.0,"Comp_max":25.0},{"famille":"Racines","espece":"Panais","fertilisation":"N 60 / P 80 / K 200 U/ha","compost":"fumure fraîche DÉCONSEILLÉE, privilégier compost décomposé","commentaires":"","N_min":60.0,"N_max":60.0,"P_min":80.0,"P_max":80.0,"K_min":200.0,"K_max":200.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Racines","espece":"Radis noir","fertilisation":"N 70 / P 50 / K 120 U/ha","compost":"compost mûr si sol pauvre","commentaires":"","N_min":70.0,"N_max":70.0,"P_min":50.0,"P_max":50.0,"K_min":120.0,"K_max":120.0,"Comp_min":0.0,"Comp_max":0.0},{"famille":"Autres","espece":"Maïs doux","fertilisation":"N 180 / P 60 / K 150 U/ha","compost":"30 t/ha fumier composté OU compost mûr","commentaires":"Très gourmand en N","N_min":180.0,"N_max":180.0,"P_min":60.0,"P_max":60.0,"K_min":150.0,"K_max":150.0,"Comp_min":30.0,"Comp_max":30.0},{"famille":"Autres","espece":"Fenouil","fertilisation":"N 180 / P 60 / K 150 U/ha","compost":"30 t/ha fumier composté","commentaires":"","N_min":180.0,"N_max":180.0,"P_min":60.0,"P_max":60.0,"K_min":150.0,"K_max":150.0,"Comp_min":30.0,"Comp_max":30.0},{"famille":"Autres","espece":"Céleri branche","fertilisation":"N 250 / P 100 / K 400 U/ha","compost":"30–50 t/ha fumier composté","commentaires":"Très gourmand ; besoins élevés en B et Ca (prévenir cœur noir)","N_min":250.0,"N_max":250.0,"P_min":100.0,"P_max":100.0,"K_min":400.0,"K_max":400.0,"Comp_min":30.0,"Comp_max":50.0},{"famille":"Autres","espece":"Céleri-rave","fertilisation":"N 200 / P 80 / K 350 U/ha","compost":"30–40 t/ha fumier composté","commentaires":"besoins B importants","N_min":200.0,"N_max":200.0,"P_min":80.0,"P_max":80.0,"K_min":350.0,"K_max":350.0,"Comp_min":30.0,"Comp_max":40.0},{"famille":"Autres","espece":"Chicorée","fertilisation":"N 80–120 / P 40 / K 150 U/ha","compost":"20–30 t/ha compost mûr","commentaires":"","N_min":80.0,"N_max":120.0,"P_min":40.0,"P_max":40.0,"K_min":150.0,"K_max":150.0,"Comp_min":20.0,"Comp_max":30.0}],"maladies":[{"famille":"Cucurbitacées","espece":"Courge","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable (KUMULUS DF) ; bicarbonate de K (Vitisan) ; HE orange douce (Limocide) ; aération ; variétés tolérantes"},{"nom":"Mildiou","lutte":"Cuivre préventif (BB 2 kg/ha) ; éviter feuillage humide ; rotation 5+ ans ; arrosage matinal"},{"nom":"Pourriture grise (Botrytis)","lutte":"Aération ; éviter blessures ; cuivre après grêle ; éliminer plants infectés"},{"nom":"Virus de la mosaïque (CMV)","lutte":"Lutter contre pucerons vecteurs ; éliminer adventices hôtes ; semences saines"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; neemazal ; panneaux jaunes englués ; auxiliaires (Aphidius, syrphes, coccinelles)"},{"nom":"Limaces et escargots","lutte":"Piégeage (planches, tuiles) ; ferramol ; biodiversité (chauve-souris, oiseaux)"},{"nom":"Punaise verte (Nezara viridula)","lutte":"Surveillance ; ramassage manuel ; filet anti-insectes au stade jeune"},{"nom":"Taupin (jeunes plants)","lutte":"Binages répétés printemps/été ; semis de crucifères en couverture (effet répulsif glucosinolates) ; tourteau de neem ou ricin"}]},{"famille":"Cucurbitacées","espece":"Potiron","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable ; bicarbonate de K ; aération"},{"nom":"Mildiou","lutte":"Cuivre préventif ; rotation 5+ ans ; éviter feuillage humide"},{"nom":"Anthracnose","lutte":"Rotation 5+ ans ; semences saines ; arrosage goutte-à-goutte ; éliminer plants infectés"},{"nom":"Pourriture grise","lutte":"Aération ; éviter blessures ; éliminer plants atteints"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires (Aphidius, coccinelles)"},{"nom":"Limaces","lutte":"Piégeage ; ferramol ; biodiversité"},{"nom":"Punaises","lutte":"Surveillance ; ramassage manuel"},{"nom":"Taupin","lutte":"Binages répétés ; tourteau de neem"}]},{"famille":"Cucurbitacées","espece":"Potimarron","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable ; aération ; variétés tolérantes"},{"nom":"Mildiou","lutte":"Cuivre préventif ; rotation 5+ ans"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"},{"nom":"Virus de la mosaïque","lutte":"Lutte contre pucerons vecteurs ; semences saines"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Punaises","lutte":"Ramassage manuel"},{"nom":"Taupin","lutte":"Binages ; tourteau de neem"}]},{"famille":"Cucurbitacées","espece":"Courgette","maladies":[{"nom":"Oïdium (très fréquent)","lutte":"Soufre mouillable KUMULUS DF (max 7,5 kg/ha) ; bicarbonate de K (Vitisan) ; HE orange douce ; aération"},{"nom":"Mildiou","lutte":"Cuivre préventif ; éviter feuillage humide ; rotation"},{"nom":"Virus de la mosaïque (CMV, ZYMV)","lutte":"Lutter contre pucerons vecteurs ; panneaux jaunes englués ; éliminer plants infectés"},{"nom":"Pourriture grise","lutte":"Aération ; éviter blessures"}],"ravageurs":[{"nom":"Pucerons (vecteurs de virus)","lutte":"Savon noir ; PBI Aphidius colemani ; panneaux jaunes ; éviter excès azote"},{"nom":"Aleurodes","lutte":"PBI Encarsia formosa, Macrolophus ; panneaux jaunes englués"},{"nom":"Acariens (sous abri)","lutte":"Bassiner pour augmenter hygrométrie ; PBI Phytoseiulus ; soufre poudre modéré"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux englués bleus ; hygrométrie élevée"}]},{"famille":"Cucurbitacées","espece":"Concombre","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable ; bicarbonate de K ; aération"},{"nom":"Mildiou (Pseudoperonospora cubensis)","lutte":"Cuivre préventif (10–25°C favorable) ; éviter feuillage humide"},{"nom":"Cladosporiose","lutte":"Aération sous abri ; éviter excès humidité ; éliminer feuilles atteintes"},{"nom":"Pythium (fonte des semis)","lutte":"Substrat sain ; éviter excès d'eau au semis ; semences saines"},{"nom":"Virus (CMV)","lutte":"Lutter contre pucerons ; semences saines"}],"ravageurs":[{"nom":"Pucerons","lutte":"PBI Aphidius colemani ; savon noir ; panneaux jaunes"},{"nom":"Aleurodes","lutte":"PBI Encarsia formosa ; panneaux jaunes"},{"nom":"Acariens tétranyques","lutte":"Bassiner ; PBI Phytoseiulus, Amblyseius swirskii ; soufre modéré"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux bleus"}]},{"famille":"Cucurbitacées","espece":"Melon","maladies":[{"nom":"Oïdium","lutte":"Soufre micronisé KUMULUS DF (max 7,5 kg/ha, 6 applic.) ; soufre triture OIDIOL POUDRAGE"},{"nom":"Mildiou","lutte":"Cuivre préventif ; éviter feuillage humide"},{"nom":"Fusariose","lutte":"Greffe sur porte-greffe résistant ; rotation longue ; sortir plants infectés"},{"nom":"Bactériose","lutte":"Semences saines ; cuivre préventif après grêle ; éviter aspersion"},{"nom":"Virus (CMV, WMV)","lutte":"Lutte contre pucerons ; semences saines"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"}],"ravageurs":[{"nom":"Pucerons (Aphis gossypii)","lutte":"PBI Aphidius colemani ; savon noir ; argile ; panneaux jaunes"},{"nom":"Acariens","lutte":"Bassiner ; PBI Phytoseiulus ; soufre modéré"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux bleus ; hygrométrie élevée"},{"nom":"Aleurodes","lutte":"PBI Encarsia ; panneaux jaunes"},{"nom":"Mouches mineuses","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"}]},{"famille":"Cucurbitacées","espece":"Pastèque","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable ; aération"},{"nom":"Mildiou","lutte":"Cuivre préventif ; rotation longue"},{"nom":"Fusariose","lutte":"Greffage si antécédent ; rotation longue"},{"nom":"Anthracnose","lutte":"Rotation 5+ ans ; semences saines ; arrosage goutte-à-goutte"},{"nom":"Virus","lutte":"Lutte contre pucerons ; semences saines"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Acariens","lutte":"PBI Phytoseiulus ; bassiner"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux bleus"},{"nom":"Aleurodes","lutte":"PBI Encarsia ; panneaux jaunes"}]},{"famille":"Solanacées","espece":"Tomate","maladies":[{"nom":"Mildiou (Phytophthora infestans, 17–20°C)","lutte":"Cuivre préventif (BB 2 kg/ha) ; en présence : 4 kg/ha (max 4 kg Cu/ha/an) ; éviter feuillage humide ; aération ; arrosage goutte-à-goutte"},{"nom":"Alternariose","lutte":"Semences saines ; rotation 5+ ans ; éliminer débris ; cuivre préventif"},{"nom":"Cladosporiose","lutte":"Aération sous abri ; variétés résistantes ; éviter excès humidité"},{"nom":"Oïdium","lutte":"Soufre mouillable ; bicarbonate de K (Vitisan)"},{"nom":"Pourriture grise (Botrytis)","lutte":"Aération ; éviter blessures lors de la taille ; éliminer plants atteints"},{"nom":"Cul noir (carence Ca)","lutte":"Apport calcium ; arrosage régulier ; éviter excès azote/potassium"},{"nom":"Virus (TMV, ToMV, ToBRFV)","lutte":"Semences certifiées indemnes ; désinfection outils ; ÉVITER ToBRFV (très contaminant) ; pas de plants ou supports recyclés"}],"ravageurs":[{"nom":"Aleurodes (Bemisia tabaci)","lutte":"PBI Encarsia formosa, Macrolophus ; panneaux jaunes englués"},{"nom":"Pucerons (Macrosiphum euphorbiae)","lutte":"PBI Aphidius ervi, Aphelinus ; savon noir"},{"nom":"Tuta absoluta","lutte":"Macrolophus 3 ind/m² + Trichogramma + Bt en soirée tous les 10 jours + confusion sexuelle ISONET (1 diff./10 m², renouvelé 120–150 j) + pièges phéromones"},{"nom":"Acariens","lutte":"PBI Phytoseiulus ; bassiner ; soufre poudre modéré"},{"nom":"Nématodes à galles (Meloidogyne)","lutte":"Porte-greffe KNVF ; rotation longue avec non-hôtes (alliums, brassicaceae) ; engrais vert (céréale, crucifères, phacélie, tagètes) ; Bacillus firmus (FLOCTER) ; solarisation"},{"nom":"Noctuelles (Helicoverpa armigera)","lutte":"HELICOVEX (virus) ; Bt (Lepinox Plus) ; piégeage phéromones"}]},{"famille":"Solanacées","espece":"Aubergine","maladies":[{"nom":"Verticilliose","lutte":"Variétés résistantes ; greffe sur porte-greffe ; biner/butter pour nouvelles racines ; éliminer morelle noire et amarante (plantes hôtes) ; sortir plants infectés"},{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Oïdium","lutte":"Soufre mouillable ; bicarbonate de K"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"},{"nom":"Bactériose","lutte":"Semences saines ; cuivre préventif ; éviter aspersion"}],"ravageurs":[{"nom":"Doryphore (Leptinotarsa decemlineata)","lutte":"Ramassage manuel/mécanique ; Spinosad (Success 4) ; détruire morelle noire ; rotation ; associations à tester (lin rouge, fèves)"},{"nom":"Aleurodes","lutte":"PBI Encarsia, Macrolophus ; panneaux jaunes"},{"nom":"Acariens","lutte":"PBI Phytoseiulus ; bassiner"},{"nom":"Pucerons","lutte":"PBI Aphidius ervi ; savon noir"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux bleus"},{"nom":"Punaises","lutte":"Surveillance ; ramassage"}]},{"famille":"Solanacées","espece":"Poivron","maladies":[{"nom":"Pourriture grise (Botrytis)","lutte":"Aération ; éviter blessures ; éliminer plants atteints"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Oïdium","lutte":"Soufre mouillable ; bicarbonate de K"},{"nom":"Cul noir (carence Ca)","lutte":"Apport calcium ; arrosage régulier ; éviter excès azote"},{"nom":"Virus (TMV, TSWV)","lutte":"Semences saines ; lutte contre thrips vecteurs (TSWV) ; désinfection outils"}],"ravageurs":[{"nom":"Pucerons","lutte":"PBI Aphidius ervi, Aphelinus ; savon noir"},{"nom":"Thrips (vecteur TSWV)","lutte":"PBI Orius ; panneaux englués bleus ; hygrométrie 80% ; nettoyage des abris"},{"nom":"Aleurodes","lutte":"PBI Encarsia, Macrolophus ; panneaux jaunes"},{"nom":"Acariens","lutte":"PBI Phytoseiulus ; bassiner"},{"nom":"Noctuelles","lutte":"Bt (Lepinox) ; HELICOVEX ; piégeage phéromones"},{"nom":"Pyrale","lutte":"Bt ; piégeage phéromones"}]},{"famille":"Solanacées","espece":"Piment","maladies":[{"nom":"Pourriture grise","lutte":"Aération ; éviter blessures"},{"nom":"Oïdium","lutte":"Soufre mouillable"},{"nom":"Anthracnose","lutte":"Semences saines ; rotation ; arrosage goutte-à-goutte"},{"nom":"Verticilliose","lutte":"Greffe ; éliminer plantes hôtes (morelle noire)"},{"nom":"Virus (TMV, TSWV)","lutte":"Semences saines ; lutte contre thrips vecteurs"}],"ravageurs":[{"nom":"Pucerons","lutte":"PBI Aphidius ; savon noir"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux bleus"},{"nom":"Aleurodes","lutte":"PBI Encarsia ; panneaux jaunes"},{"nom":"Acariens","lutte":"PBI Phytoseiulus ; bassiner"},{"nom":"Noctuelles","lutte":"Bt ; piégeage phéromones"}]},{"famille":"Alliacées","espece":"Poireau","maladies":[{"nom":"Rouille","lutte":"Variétés tolérantes ; rotation 4+ ans ; cuivre préventif ; aération ; éliminer débris"},{"nom":"Mildiou","lutte":"Cuivre préventif ; éviter feuillage humide"},{"nom":"Alternariose","lutte":"Semences saines ; rotation ; éliminer débris ; traitement vinaigre des semences"},{"nom":"Pourriture blanche","lutte":"Rotation 7+ ans (sclérotes persistent) ; éviter parcelles humides"},{"nom":"Fusariose","lutte":"Plants sains ; rotation longue ; drainage"}],"ravageurs":[{"nom":"Teigne du poireau","lutte":"Filet anti-insectes (mailles fines) ; piégeage phéromones"},{"nom":"Mineuse du poireau (Phytomyza gymnostoma)","lutte":"Filet anti-insectes IMPÉRATIF (printemps + automne) ; brûler les feuilles atteintes"},{"nom":"Thrips","lutte":"PBI Orius ; bassiner ; panneaux bleus"},{"nom":"Mouche du poireau","lutte":"Filet anti-insectes"}]},{"famille":"Alliacées","espece":"Oignon","maladies":[{"nom":"Mildiou (Peronospora destructor, 4–25°C)","lutte":"Cuivre préventif ; bulbilles saines ; éviter excès azote ; rotation 4+ ans"},{"nom":"Pourriture blanche (Sclerotium cepivorum)","lutte":"Rotation 7+ ans (persiste 5+ ans dans le sol) ; éviter parcelles humides"},{"nom":"Botrytis col","lutte":"Bulbilles saines ; bonne maturation avant récolte ; séchage soigné"},{"nom":"Fusariose","lutte":"Bulbilles saines ; rotation ; drainage"},{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif ; éliminer débris"}],"ravageurs":[{"nom":"Mouche de l'oignon (Delia antiqua)","lutte":"Filet anti-insectes ; rotation ; éviter parcelles avec antécédents"},{"nom":"Thrips","lutte":"PBI Orius ; bassiner ; panneaux bleus"},{"nom":"Mineuses","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"}]},{"famille":"Alliacées","espece":"Ciboule","maladies":[{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Rouille","lutte":"Variétés tolérantes ; éliminer débris"},{"nom":"Pourriture blanche","lutte":"Rotation 7+ ans"}],"ravageurs":[{"nom":"Thrips","lutte":"PBI Orius ; bassiner"},{"nom":"Mouche de l'oignon","lutte":"Filet anti-insectes"},{"nom":"Mineuses","lutte":"Filet anti-insectes"}]},{"famille":"Alliacées","espece":"Échalote (semis)","maladies":[{"nom":"Mildiou","lutte":"Cuivre préventif ; bulbilles saines"},{"nom":"Pourriture blanche","lutte":"Rotation 7+ ans ; éviter parcelles humides"},{"nom":"Fusariose","lutte":"Bulbilles saines ; rotation longue"},{"nom":"Botrytis","lutte":"Séchage soigné ; bulbilles saines"}],"ravageurs":[{"nom":"Mouche de l'oignon","lutte":"Filet anti-insectes ; rotation"},{"nom":"Thrips","lutte":"PBI Orius ; bassiner"},{"nom":"Mineuses","lutte":"Filet anti-insectes"}]},{"famille":"Choux & brassicacées","espece":"Chou cabus","maladies":[{"nom":"Hernie du chou (Plasmodiophora)","lutte":"Rotation 7+ ans (persiste 7–8 ans) ; pH > 7 (chaulage) ; drainage ; semences saines"},{"nom":"Mildiou","lutte":"Cuivre préventif ; aération ; rotation"},{"nom":"Alternariose","lutte":"Semences saines (traitement vinaigre) ; rotation ; éliminer débris"},{"nom":"Sclerotinia","lutte":"CONTANS WG (Coniothyrium minitans) ; drainage ; rotation ; aération"},{"nom":"Nervation noire (Xanthomonas)","lutte":"Semences saines ; rotation ; éviter aspersion ; cuivre préventif"}],"ravageurs":[{"nom":"Piéride du chou","lutte":"Filet anti-insectes ; Bt (Bacillus thuringiensis) ; ramassage chenilles"},{"nom":"Mouche du chou (Delia radicum)","lutte":"Filet anti-insectes IMPÉRATIF dès plantation ; collerettes anti-ponte"},{"nom":"Altises","lutte":"Filet anti-insectes ; sols humides paillés ; arrosage par aspersion ; plantes pièges (moutarde d'Abyssinie - GRAB)"},{"nom":"Pucerons cendrés","lutte":"Savon noir ; auxiliaires (coccinelles, syrphes) ; éviter excès azote"},{"nom":"Noctuelles","lutte":"Bt (Lepinox) ; piégeage phéromones"}]},{"famille":"Choux & brassicacées","espece":"Chou frisé","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 7+ ans ; pH > 7 ; semences saines"},{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Alternariose","lutte":"Semences saines ; rotation ; éliminer débris"},{"nom":"Oïdium","lutte":"Soufre mouillable ; aération"}],"ravageurs":[{"nom":"Piéride","lutte":"Filet anti-insectes ; Bt ; ramassage"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes ; collerettes"},{"nom":"Altises","lutte":"Filet anti-insectes ; arrosage aspersion"},{"nom":"Pucerons cendrés","lutte":"Savon noir ; auxiliaires"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"}]},{"famille":"Choux & brassicacées","espece":"Chou-fleur","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 7+ ans ; pH > 7 ; chaulage si sol acide"},{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage ; aération"},{"nom":"Carence en bore (cœur creux)","lutte":"Apport bore (essentiel) ; analyse sol"}],"ravageurs":[{"nom":"Piéride","lutte":"Filet anti-insectes ; Bt"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes IMPÉRATIF ; collerettes"},{"nom":"Altises","lutte":"Filet anti-insectes ; aspersion"},{"nom":"Pucerons cendrés","lutte":"Savon noir"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"}]},{"famille":"Choux & brassicacées","espece":"Brocoli","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 7+ ans ; pH > 7"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; aération"}],"ravageurs":[{"nom":"Piéride","lutte":"Filet anti-insectes ; Bt"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes ; collerettes"},{"nom":"Altises","lutte":"Filet anti-insectes"},{"nom":"Pucerons cendrés","lutte":"Savon noir"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"}]},{"famille":"Choux & brassicacées","espece":"Chou de Bruxelles","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 7+ ans ; pH > 7"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Alternariose","lutte":"Semences saines"},{"nom":"Oïdium","lutte":"Soufre mouillable"}],"ravageurs":[{"nom":"Piéride","lutte":"Filet anti-insectes ; Bt"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes ; collerettes"},{"nom":"Altises","lutte":"Filet anti-insectes"},{"nom":"Pucerons cendrés","lutte":"Savon noir"},{"nom":"Noctuelles","lutte":"Bt"},{"nom":"Charançon de la tige","lutte":"Filet anti-insectes ; rotation"}]},{"famille":"Choux & brassicacées","espece":"Pak choï","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 7+ ans ; pH > 7"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"},{"nom":"Mildiou","lutte":"Cuivre préventif"}],"ravageurs":[{"nom":"Altises (très sensibles au stade jeune)","lutte":"Filet anti-insectes IMPÉRATIF ; sols humides paillés ; arrosage par aspersion fréquent ; plantes pièges"},{"nom":"Piéride","lutte":"Filet anti-insectes ; Bt"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes"}]},{"famille":"Choux & brassicacées","espece":"Bok choï","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 7+ ans ; pH > 7"},{"nom":"Alternariose","lutte":"Semences saines"},{"nom":"Mildiou","lutte":"Cuivre préventif"}],"ravageurs":[{"nom":"Altises","lutte":"Filet anti-insectes IMPÉRATIF ; sols humides paillés ; aspersion"},{"nom":"Piéride","lutte":"Filet anti-insectes ; Bt"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes"}]},{"famille":"Choux & brassicacées","espece":"Navet","maladies":[{"nom":"Hernie du chou","lutte":"Rotation 4+ ans ; pH > 7"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"},{"nom":"Mildiou","lutte":"Cuivre préventif"}],"ravageurs":[{"nom":"Altises","lutte":"Filet anti-insectes ; aspersion ; sols humides"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes"},{"nom":"Pucerons cendrés","lutte":"Savon noir"},{"nom":"Charançon de la galle","lutte":"Rotation ; filet anti-insectes"}]},{"famille":"Choux & brassicacées","espece":"Radis","maladies":[{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"}],"ravageurs":[{"nom":"Altises (très importantes)","lutte":"Filet anti-insectes IMPÉRATIF ; sols humides ; arrosage fréquent ; plantes pièges"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes"},{"nom":"Pucerons","lutte":"Savon noir"}]},{"famille":"Légumineuses","espece":"Pois","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable (KUMULUS DF, max 5 kg/ha sur pois) ; aération"},{"nom":"Anthracnose","lutte":"Semences saines ; rotation 5+ ans ; éviter feuillage humide"},{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; rotation 5+ ans ; drainage"},{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Fonte des semis","lutte":"Substrat sain ; semences saines ; éviter excès d'eau"}],"ravageurs":[{"nom":"Tordeuse du pois","lutte":"Piégeage phéromones ; semis précoce ; rotation"},{"nom":"Pucerons","lutte":"Savon noir ; PBI Aphidius"},{"nom":"Thrips","lutte":"PBI Orius"},{"nom":"Sitones","lutte":"Rotation ; semis vigoureux"},{"nom":"Bruche du pois","lutte":"Tri post-récolte ; congélation des semences avant stockage"},{"nom":"Mouche des semis","lutte":"Semis dans sol réchauffé ; éviter MO fraîche"}]},{"famille":"Légumineuses","espece":"Pois mangetout","maladies":[{"nom":"Oïdium","lutte":"Soufre mouillable ; aération"},{"nom":"Anthracnose","lutte":"Semences saines ; rotation 5+ ans"},{"nom":"Rouille","lutte":"Cuivre préventif ; variétés tolérantes"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; rotation"}],"ravageurs":[{"nom":"Tordeuse du pois","lutte":"Piégeage phéromones ; semis précoce"},{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Thrips","lutte":"PBI Orius"},{"nom":"Sitones","lutte":"Rotation"},{"nom":"Bruche","lutte":"Tri post-récolte ; congélation"}]},{"famille":"Légumineuses","espece":"Fève","maladies":[{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif ; éliminer débris"},{"nom":"Chocolat (Botrytis fabae)","lutte":"Aération ; rotation ; éviter excès humidité"},{"nom":"Anthracnose","lutte":"Semences saines ; rotation 5+ ans"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; rotation"}],"ravageurs":[{"nom":"Puceron noir de la fève (Aphis fabae)","lutte":"Étêter en pleine floraison (très efficace) ; savon noir ; PBI Aphidius ; semis automne ou très précoce"},{"nom":"Sitones","lutte":"Rotation ; semis vigoureux"},{"nom":"Bruche de la fève","lutte":"Tri post-récolte ; congélation des semences"},{"nom":"Thrips","lutte":"PBI Orius"}]},{"famille":"Légumineuses","espece":"Haricot nain","maladies":[{"nom":"Anthracnose","lutte":"Semences saines ; rotation 4+ ans ; éviter feuillage humide"},{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; rotation ; drainage"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"},{"nom":"Bactériose (graisse)","lutte":"Semences saines ; PAS d'aspersion ; cuivre préventif"},{"nom":"Virus (BCMV)","lutte":"Semences certifiées ; lutte contre pucerons vecteurs"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; PBI Aphidius"},{"nom":"Tétranyques (acariens)","lutte":"Bassiner ; PBI Phytoseiulus ; soufre modéré"},{"nom":"Thrips","lutte":"PBI Orius ; éloigner cultures sensibles"},{"nom":"Mouche des semis","lutte":"Semis dans sol réchauffé ; éviter MO fraîche"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"}]},{"famille":"Légumineuses","espece":"Haricot à rame","maladies":[{"nom":"Anthracnose","lutte":"Semences saines ; rotation 4+ ans"},{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; rotation"},{"nom":"Bactériose","lutte":"Semences saines ; pas d'aspersion"},{"nom":"Virus","lutte":"Semences certifiées ; lutte contre pucerons"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; PBI Aphidius"},{"nom":"Tétranyques","lutte":"Bassiner ; PBI Phytoseiulus"},{"nom":"Thrips","lutte":"PBI Orius"},{"nom":"Mouche des semis","lutte":"Semis dans sol réchauffé"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"}]},{"famille":"Légumineuses","espece":"Pois chiche","maladies":[{"nom":"Anthracnose (Ascochyta)","lutte":"Rotation 5+ ans (très persistant) ; semences certifiées ; éviter feuillage humide"},{"nom":"Fusariose","lutte":"Rotation longue ; semences saines"},{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif"}],"ravageurs":[{"nom":"Tordeuse du pois","lutte":"Piégeage phéromones"},{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Sitones","lutte":"Rotation"},{"nom":"Bruche","lutte":"Tri post-récolte ; congélation"}]},{"famille":"Légumes-feuilles","espece":"Laitue","maladies":[{"nom":"Mildiou (Bremia lactucae, 15°C)","lutte":"Variétés résistantes Bremia (le plus efficace) ; aération ; arrosage matinal ; éviter humidité prolongée"},{"nom":"Sclerotinia","lutte":"CONTANS WG (Coniothyrium minitans) ; rotation ; drainage ; aération"},{"nom":"Pourriture grise (Botrytis)","lutte":"Aération ; éviter blessures ; éliminer plants atteints"},{"nom":"Fonte des semis","lutte":"Substrat sain ; éviter excès d'eau au semis"},{"nom":"Anthracnose","lutte":"Semences saines ; rotation"},{"nom":"Nécrose marginale (carence Ca)","lutte":"Apport calcium ; arrosage régulier ; éviter excès azote"}],"ravageurs":[{"nom":"Pucerons (Nasonovia ribisnigri)","lutte":"Variétés résistantes Nr ; savon noir ; PBI Aphidius"},{"nom":"Limaces et escargots","lutte":"Piégeage ; ferramol ; biodiversité"},{"nom":"Noctuelles","lutte":"Bt (Lepinox) ; piégeage phéromones ; filet"},{"nom":"Mineuses","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"},{"nom":"Thrips","lutte":"PBI Orius ; panneaux bleus"}]},{"famille":"Légumes-feuilles","espece":"Batavia","maladies":[{"nom":"Mildiou (Bremia)","lutte":"Variétés résistantes ; aération ; arrosage matinal"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"},{"nom":"Anthracnose","lutte":"Semences saines ; rotation"}],"ravageurs":[{"nom":"Pucerons","lutte":"Variétés résistantes Nr ; savon noir"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"},{"nom":"Mineuses","lutte":"Filet anti-insectes"},{"nom":"Thrips","lutte":"PBI Orius"}]},{"famille":"Légumes-feuilles","espece":"Feuille de chêne","maladies":[{"nom":"Mildiou (Bremia)","lutte":"Variétés résistantes ; aération"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"},{"nom":"Pourriture grise","lutte":"Aération"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Noctuelles","lutte":"Bt"},{"nom":"Thrips","lutte":"PBI Orius"}]},{"famille":"Légumes-feuilles","espece":"Mâche","maladies":[{"nom":"Mildiou (Peronospora)","lutte":"Aération sous abri ; éviter excès d'eau ; rotation"},{"nom":"Oïdium","lutte":"Soufre mouillable ; aération"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"},{"nom":"Phoma","lutte":"Semences saines ; rotation"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Limaces et escargots","lutte":"Piégeage ; ferramol"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"}]},{"famille":"Légumes-feuilles","espece":"Épinard","maladies":[{"nom":"Mildiou (Peronospora farinosa)","lutte":"Variétés résistantes ; rotation 3+ ans ; cuivre préventif"},{"nom":"Cladosporiose","lutte":"Aération ; rotation"},{"nom":"Cercosporiose","lutte":"Rotation ; éliminer débris ; cuivre préventif"},{"nom":"Virus (mosaïque)","lutte":"Lutte contre pucerons vecteurs"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Mineuses (Pegomya)","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"}]},{"famille":"Légumes-feuilles","espece":"Roquette","maladies":[{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"}],"ravageurs":[{"nom":"Altises (importantes)","lutte":"Filet anti-insectes IMPÉRATIF ; sols humides ; arrosage par aspersion fréquent"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"}]},{"famille":"Racines","espece":"Carotte","maladies":[{"nom":"Alternariose","lutte":"Semences saines (traitement vinaigre possible) ; rotation 5+ ans ; éliminer débris"},{"nom":"Oïdium","lutte":"Soufre mouillable (KUMULUS DF, max 6 kg/ha sur carotte)"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; rotation ; drainage"},{"nom":"Cavity spot (Pythium)","lutte":"Drainage ; éviter excès d'eau ; rotation longue"},{"nom":"Rhizoctone violet","lutte":"Rotation longue ; semences/plants sains ; substrat désinfecté ; éviter humidité de surface"}],"ravageurs":[{"nom":"Mouche de la carotte (Psila rosae)","lutte":"Filet anti-insectes IMPÉRATIF (mailles 1,3 mm) ; rotation 5+ ans ; éloigner des cultures précédentes"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Nématodes","lutte":"Rotation avec non-hôtes ; engrais vert (céréales, crucifères, tagètes)"},{"nom":"Campagnols","lutte":"Pièges ; favoriser rapaces (perchoirs)"}]},{"famille":"Racines","espece":"Betterave","maladies":[{"nom":"Cercosporiose","lutte":"Semences saines ; rotation 4+ ans ; cuivre préventif si forte pression ; éliminer débris"},{"nom":"Rouille","lutte":"Variétés tolérantes ; cuivre préventif"},{"nom":"Rhizomanie","lutte":"Rotation longue ; variétés résistantes"},{"nom":"Pourriture du collet","lutte":"Drainage ; rotation ; éviter blessures à la récolte"}],"ravageurs":[{"nom":"Mouche de la betterave (Pegomya)","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"},{"nom":"Pucerons noirs","lutte":"Savon noir ; PBI Aphidius"},{"nom":"Altises","lutte":"Filet anti-insectes ; aspersion"},{"nom":"Tipule","lutte":"Rotation ; travail du sol"},{"nom":"Lixus juncii","lutte":"Surveillance automne ; rotation"}]},{"famille":"Racines","espece":"Blette","maladies":[{"nom":"Cercosporiose","lutte":"Semences saines ; rotation ; cuivre préventif"},{"nom":"Rouille","lutte":"Variétés tolérantes"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Phoma","lutte":"Semences saines ; rotation"}],"ravageurs":[{"nom":"Mineuse de la betterave (Pegomya)","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Altises","lutte":"Filet anti-insectes"},{"nom":"Lixus juncii","lutte":"Surveillance automne"}]},{"famille":"Racines","espece":"Panais","maladies":[{"nom":"Alternariose","lutte":"Semences saines ; rotation 6+ ans (Apiacées)"},{"nom":"Oïdium","lutte":"Soufre mouillable"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Cavity spot","lutte":"Drainage ; rotation"}],"ravageurs":[{"nom":"Mouche de la carotte","lutte":"Filet anti-insectes IMPÉRATIF ; rotation 6+ ans"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Nématodes","lutte":"Rotation avec non-hôtes ; engrais vert"}]},{"famille":"Racines","espece":"Radis noir","maladies":[{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Alternariose","lutte":"Semences saines ; rotation"},{"nom":"Oïdium","lutte":"Soufre mouillable"}],"ravageurs":[{"nom":"Altises (très importantes)","lutte":"Filet anti-insectes IMPÉRATIF ; sols humides ; aspersion"},{"nom":"Mouche du chou","lutte":"Filet anti-insectes ; rotation 4+ ans"},{"nom":"Pucerons","lutte":"Savon noir"}]},{"famille":"Autres","espece":"Maïs doux","maladies":[{"nom":"Helminthosporiose","lutte":"Variétés tolérantes ; rotation 3+ ans ; éliminer débris"},{"nom":"Charbon (Ustilago)","lutte":"Semences saines ; rotation ; éliminer plants atteints (ne pas composter)"},{"nom":"Fusariose","lutte":"Rotation ; éviter blessures ; semences saines"},{"nom":"Rouille","lutte":"Variétés tolérantes"}],"ravageurs":[{"nom":"Pyrale du maïs (Ostrinia)","lutte":"Trichogramma (lâchers en juin/juillet) ; rotation ; broyage des résidus"},{"nom":"Sésamie","lutte":"Trichogramma ; rotation ; broyage des résidus"},{"nom":"Pucerons","lutte":"Savon noir ; auxiliaires"},{"nom":"Corbeaux et oiseaux","lutte":"Filets à la levée ; effaroucheurs ; semis groupés"}]},{"famille":"Autres","espece":"Fenouil","maladies":[{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage ; aération"},{"nom":"Alternariose","lutte":"Semences saines ; rotation longue (Apiacées)"},{"nom":"Cercosporiose","lutte":"Rotation ; éliminer débris"},{"nom":"Mildiou","lutte":"Cuivre préventif"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Mouche de la carotte","lutte":"Filet anti-insectes"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Chenilles défoliatrices","lutte":"Bt ; ramassage"}]},{"famille":"Autres","espece":"Céleri branche","maladies":[{"nom":"Septoriose (très fréquente)","lutte":"Semences traitées au vinaigre ; éviter aspersion fin d'été (orages = septoriose) ; rotation 4+ ans ; cuivre préventif"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"},{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Cœur noir (carence Ca/B)","lutte":"Apport bore + calcium ; arrosage régulier"}],"ravageurs":[{"nom":"Mouche du céleri (Philophylla)","lutte":"Filet anti-insectes ; éliminer feuilles atteintes"},{"nom":"Pucerons","lutte":"Savon noir ; PBI Aphidius"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Nématodes","lutte":"Rotation ; engrais vert (tagètes, crucifères)"}]},{"famille":"Autres","espece":"Céleri-rave","maladies":[{"nom":"Septoriose","lutte":"Semences traitées au vinaigre ; éviter aspersion ; rotation 4+ ans ; cuivre préventif"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage"},{"nom":"Rouille","lutte":"Variétés tolérantes"},{"nom":"Mildiou","lutte":"Cuivre préventif"},{"nom":"Cœur noir (carence B)","lutte":"Apport bore essentiel"}],"ravageurs":[{"nom":"Mouche du céleri","lutte":"Filet anti-insectes"},{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Nématodes","lutte":"Rotation ; engrais vert"}]},{"famille":"Autres","espece":"Chicorée","maladies":[{"nom":"Mildiou","lutte":"Cuivre préventif ; aération"},{"nom":"Sclerotinia","lutte":"CONTANS WG ; drainage ; rotation"},{"nom":"Pourriture grise","lutte":"Aération ; éliminer plants atteints"},{"nom":"Oïdium","lutte":"Soufre mouillable"}],"ravageurs":[{"nom":"Pucerons","lutte":"Savon noir"},{"nom":"Limaces","lutte":"Piégeage ; ferramol"},{"nom":"Noctuelles","lutte":"Bt ; piégeage"},{"nom":"Thrips","lutte":"PBI Orius"}]}],"climat":[{"nom":"Mildiou tomate / pomme de terre","pathogene":"Phytophthora infestans","cultures":["Tomate","Aubergine","Poivron"],"cultures_txt":"Tomate, Aubergine (rare), Poivron (rare)","t_min":10.0,"t_opt_min":17.0,"t_opt_max":20.0,"t_max":25.0,"hr_seuil":90,"hr_duree":12,"hr_txt":"> 90 % pendant > 12h","eau_libre":true,"eau_txt":"OUI – film d'eau sur feuille pendant 2h minimum","incubation":"4 à 7 jours (cycle 4–6 j à 15 °C)","periode":"Mai à septembre (recrudescence depuis années 1990)","alerte":"T° 17–20 °C + HR > 90 % > 12h + feuilles humides 2h+ → traiter cuivre 48h","sources":"INRAE Ephytia ; Bayer-agri ; ARVALIS Mileos ; MAB16 2024"},{"nom":"Mildiou salade","pathogene":"Bremia lactucae","cultures":["Laitue","Batavia","Feuille de chêne","Mâche"],"cultures_txt":"Laitue, Batavia, Feuille de chêne, Mâche","t_min":5.0,"t_opt_min":15.0,"t_opt_max":15.0,"t_max":24.0,"hr_seuil":80,"hr_duree":null,"hr_txt":"> 80 % prolongée ; rosée, brouillard, pluie","eau_libre":true,"eau_txt":"OUI – obligatoire pour germination des sporanges","incubation":"Cycle complet < 5 jours (rapide)","periode":"Toute l'année sous abri ; printemps/automne plein champ","alerte":"T° 13–20 °C jour / 5–10 °C nuit + HR élevée + eau libre → variétés résistantes Bremia + cuivre","sources":"INRAE Ephytia ; Bayer-agri ; Syngenta ; IRIIS ; GRAB ; GECO"},{"nom":"Mildiou cucurbitacées","pathogene":"Pseudoperonospora cubensis","cultures":["Concombre","Courgette","Melon","Pastèque","Courge","Potiron","Potimarron"],"cultures_txt":"Concombre, Courgette, Melon, Pastèque, Courge, Potiron, Potimarron","t_min":10.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":85,"hr_duree":null,"hr_txt":"> 85 % nocturne ; rosée matinale","eau_libre":true,"eau_txt":"OUI – plusieurs heures pour infection","incubation":"3 à 12 jours selon T°","periode":"Été (juillet–septembre)","alerte":"T° 10–25 °C + HR > 85 % nuit + rosée → cuivre préventif dès apparition rosée matinale","sources":"INRAE Ephytia ; MAB16 2024"},{"nom":"Mildiou oignon / poireau","pathogene":"Peronospora destructor","cultures":["Oignon","Échalote","Ciboule","Poireau"],"cultures_txt":"Oignon, Échalote, Ciboule, Poireau (rare)","t_min":4.0,"t_opt_min":10.0,"t_opt_max":18.0,"t_max":25.0,"hr_seuil":95,"hr_duree":11,"hr_txt":"> 95 % pendant 6–11h","eau_libre":true,"eau_txt":"OUI – rosée nocturne suffit","incubation":"11 à 15 jours","periode":"Printemps frais et humide ; automne","alerte":"Alternance jours frais (10–18 °C) + nuits humides (HR > 95 %) sur 2–3 j → cuivre","sources":"INRAE Ephytia ; MAB16 2024"},{"nom":"Mildiou épinard","pathogene":"Peronospora farinosa","cultures":["Épinard","Blette"],"cultures_txt":"Épinard, Blette (rare)","t_min":5.0,"t_opt_min":10.0,"t_opt_max":18.0,"t_max":22.0,"hr_seuil":85,"hr_duree":null,"hr_txt":"> 85 % prolongée","eau_libre":false,"eau_txt":"Recommandée (rosée)","incubation":"5 à 10 jours","periode":"Automne et printemps","alerte":"T° fraîche (10–18 °C) + HR > 85 % > 8h → variétés résistantes + cuivre","sources":"INRAE Ephytia"},{"nom":"Pourriture grise (Botrytis)","pathogene":"Botrytis cinerea","cultures":["Tomate","Laitue","Fraisier","Haricot","Aubergine","Concombre","Courgette"],"cultures_txt":"Tomate, Laitue, Fraisier, Haricot, Aubergine, Concombre, Courgette","t_min":2.0,"t_opt_min":15.0,"t_opt_max":20.0,"t_max":25.0,"hr_seuil":90,"hr_duree":null,"hr_txt":"> 90 % prolongée","eau_libre":true,"eau_txt":"OUI – feuillage humide > 6h","incubation":"3 à 7 jours","periode":"Printemps frais humide ; automne ; sous abri en permanence","alerte":"T° fraîche 15–20 °C + HR > 90 % nuit + condensation matinale → aération impérative + retirer débris","sources":"INRAE Ephytia ; MAB16 2024"},{"nom":"Sclerotinia (pourriture blanche)","pathogene":"Sclerotinia sclerotiorum / S. minor","cultures":["Laitue","Carotte","Haricot","Chou","Tomate","Céleri","Fenouil","Chicorée"],"cultures_txt":"Laitue, Carotte, Haricot, Chou, Tomate, Céleri, Fenouil, Chicorée","t_min":10.0,"t_opt_min":18.0,"t_opt_max":22.0,"t_max":28.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide (capacité au champ)","eau_libre":true,"eau_txt":"OUI au sol – eau stagnante favorable","incubation":"7 à 14 jours après germination des sclérotes","periode":"Printemps doux à été frais ; sous abri toute l'année","alerte":"T° 18–22 °C + sol gorgé d'eau > 5j → drainage, paillage, CONTANS WG (Coniothyrium minitans)","sources":"INRAE Ephytia ; ITAB ; MAB16 2024"},{"nom":"Oïdium des cucurbitacées","pathogene":"Podosphaera xanthii / Erysiphe cichoracearum","cultures":["Courgette","Concombre","Melon","Courge","Potiron","Potimarron","Pastèque"],"cultures_txt":"Courgette, Concombre, Melon, Courge, Potiron, Potimarron, Pastèque","t_min":12.0,"t_opt_min":20.0,"t_opt_max":24.0,"t_max":30.0,"hr_seuil":50,"hr_duree":null,"hr_txt":"50–75 % (atypique : aime sec)","eau_libre":false,"eau_txt":"NON – l'eau libre INHIBE la germination","incubation":"3 à 7 jours (très rapide)","periode":"Été chaud et sec ; alternance jours chauds/nuits fraîches","alerte":"T° 20–24 °C + alternance HR jour basse / HR nuit haute + stress hydrique → soufre mouillable préventif","sources":"INRAE Ephytia ; MAB16 2024"},{"nom":"Oïdium tomate","pathogene":"Leveillula taurica / Oidium neolycopersici","cultures":["Tomate","Aubergine","Poivron"],"cultures_txt":"Tomate, Aubergine, Poivron","t_min":15.0,"t_opt_min":20.0,"t_opt_max":26.0,"t_max":30.0,"hr_seuil":70,"hr_duree":null,"hr_txt":"70–85 %","eau_libre":false,"eau_txt":"NON","incubation":"5 à 10 jours","periode":"Été ; sous abri printemps-été","alerte":"T° 20–26 °C + HR moyenne + stress (manque eau) → soufre micronisé","sources":"INRAE Ephytia"},{"nom":"Alternariose tomate / pomme de terre","pathogene":"Alternaria solani / A. tomatophila","cultures":["Tomate","Aubergine","Poivron","Piment"],"cultures_txt":"Tomate, Aubergine, Poivron, Piment","t_min":3.0,"t_opt_min":20.0,"t_opt_max":30.0,"t_max":35.0,"hr_seuil":70,"hr_duree":null,"hr_txt":"> 70 % avec alternance sec/humide","eau_libre":true,"eau_txt":"OUI – 2 à 12h selon T° (3h à 20–30°C, 12h à 10°C)","incubation":"5 à 7 jours","periode":"Printemps doux pluvieux ; été (rosées matinales + orages)","alerte":"T° 20–30 °C + HR > 70 % + rosée matinale OU stress hydrique → cuivre préventif, éliminer feuilles basses","sources":"INRAE Ephytia ; Syngenta ; APPI ; Profert"},{"nom":"Alternariose carotte / panais","pathogene":"Alternaria dauci","cultures":["Carotte","Panais","Fenouil","Céleri"],"cultures_txt":"Carotte, Panais, Fenouil, Céleri","t_min":6.0,"t_opt_min":20.0,"t_opt_max":28.0,"t_max":32.0,"hr_seuil":90,"hr_duree":null,"hr_txt":"> 90 % nocturne ; rosée prolongée","eau_libre":true,"eau_txt":"OUI – feuillage humide > 8h","incubation":"8 à 16 jours (progressive)","periode":"Fin d'été, automne (cultures âgées sensibles)","alerte":"T° 20–28 °C + rosée nocturne > 8h + plantes âgées/stressées → cuivre, éviter aspersion fin de culture","sources":"INRAE Ephytia ; ITAB ; FREDON"},{"nom":"Alternariose brassicacées","pathogene":"Alternaria brassicicola / A. brassicae","cultures":["Choux","Navet","Radis","Roquette","Pak choï","Bok choï"],"cultures_txt":"Choux (tous), Navet, Radis, Roquette, Pak choï, Bok choï","t_min":5.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":90,"hr_duree":8,"hr_txt":"> 90 % pendant > 8h","eau_libre":true,"eau_txt":"OUI – pluie ou rosée prolongée","incubation":"5 à 14 jours","periode":"Été et automne (cultures matures)","alerte":"T° 20–25 °C + HR > 90 % > 8h + semences douteuses → semences traitées vinaigre, cuivre","sources":"INRAE Ephytia ; ITAB"},{"nom":"Cercosporiose betterave","pathogene":"Cercospora beticola","cultures":["Betterave","Blette","Épinard"],"cultures_txt":"Betterave, Blette, Épinard (rare)","t_min":12.0,"t_opt_min":25.0,"t_opt_max":30.0,"t_max":35.0,"hr_seuil":90,"hr_duree":10,"hr_txt":"> 90 % pendant > 10h consécutives","eau_libre":true,"eau_txt":"OUI – feuillage humide > 12h pour infection","incubation":"7 à 14 jours","periode":"Juillet à septembre (chaleurs + orages)","alerte":"T° 25–30 °C jour + HR > 90 % nuit + orages → cuivre préventif dès apparition 1ères taches","sources":"INRAE Ephytia ; ITB ; ARVALIS"},{"nom":"Septoriose céleri","pathogene":"Septoria apiicola","cultures":["Céleri branche","Céleri-rave"],"cultures_txt":"Céleri branche, Céleri-rave","t_min":5.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":28.0,"hr_seuil":95,"hr_duree":12,"hr_txt":"> 95 % pendant > 12h","eau_libre":true,"eau_txt":"OUI – plusieurs heures consécutives","incubation":"12 à 14 jours","periode":"Fin d'été et automne (orages chauds + humidité)","alerte":"Orages d'été/automne + T° 20–25 °C + HR saturante → cuivre préventif AVANT orage, éviter aspersion","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Septoriose tomate","pathogene":"Septoria lycopersici","cultures":["Tomate"],"cultures_txt":"Tomate (plein champ surtout)","t_min":15.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":28.0,"hr_seuil":90,"hr_duree":null,"hr_txt":"> 90 % prolongée","eau_libre":true,"eau_txt":"OUI – 48h après pluie idéal","incubation":"5 à 14 jours","periode":"Été humide, fin d'été","alerte":"T° 20–25 °C + pluies répétées + feuillage humide > 48h → cuivre, mulch au sol","sources":"INRAE Ephytia ; ITAB"},{"nom":"Anthracnose haricot","pathogene":"Colletotrichum lindemuthianum","cultures":["Haricot nain","Haricot à rame"],"cultures_txt":"Haricot nain, Haricot à rame","t_min":13.0,"t_opt_min":17.0,"t_opt_max":22.0,"t_max":27.0,"hr_seuil":92,"hr_duree":12,"hr_txt":"> 92 % pendant > 12h","eau_libre":true,"eau_txt":"OUI – essentielle, transmission par éclaboussures","incubation":"4 à 9 jours","periode":"Printemps doux humide ; été pluvieux","alerte":"T° 17–22 °C + pluies + arrosage aspersion → INTERDIRE aspersion, semences certifiées, cuivre","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Anthracnose cucurbitacées","pathogene":"Colletotrichum orbiculare / C. lagenarium","cultures":["Concombre","Melon","Pastèque","Courge","Potiron","Courgette"],"cultures_txt":"Concombre, Melon, Pastèque, Courge, Potiron, Courgette","t_min":4.0,"t_opt_min":22.0,"t_opt_max":27.0,"t_max":30.0,"hr_seuil":85,"hr_duree":null,"hr_txt":"> 85 % avec pluies répétées","eau_libre":true,"eau_txt":"OUI – 5h à 22°C suffisent","incubation":"4 à 12 jours","periode":"Été chaud et humide (juillet–août)","alerte":"T° 22–27 °C + pluies orageuses + arrosage aspersion → goutte-à-goutte impératif, cuivre","sources":"INRAE Ephytia ; ITAB"},{"nom":"Ascochytose pois chiche","pathogene":"Ascochyta rabiei","cultures":["Pois chiche"],"cultures_txt":"Pois chiche","t_min":5.0,"t_opt_min":15.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":90,"hr_duree":null,"hr_txt":"> 90 % avec pluies répétées","eau_libre":true,"eau_txt":"OUI – très virulente","incubation":"5 à 7 jours","periode":"Printemps pluvieux à été","alerte":"T° 15–25 °C + pluies répétées sur 5j → cuivre, rotation 5+ ans (très persistant)","sources":"INRAE ; ITAB Grandes cultures"},{"nom":"Rouille du poireau","pathogene":"Puccinia allii / P. porri","cultures":["Poireau","Ail","Oignon","Ciboule"],"cultures_txt":"Poireau, Ail, Oignon (moindre), Ciboule","t_min":5.0,"t_opt_min":10.0,"t_opt_max":18.0,"t_max":25.0,"hr_seuil":95,"hr_duree":8,"hr_txt":"> 95 % nuit ; rosée 4–8h","eau_libre":true,"eau_txt":"OUI – rosée nocturne suffit","incubation":"7 à 15 jours","periode":"Automne doux et humide ; printemps frais","alerte":"T° 10–18 °C + rosée nocturne prolongée + excès azote → cuivre, équilibrer fertilisation","sources":"INRAE Ephytia ; ITAB"},{"nom":"Rouille fève / pois","pathogene":"Uromyces fabae / U. pisi","cultures":["Fève","Pois","Pois mangetout","Pois chiche"],"cultures_txt":"Fève, Pois, Pois mangetout, Pois chiche","t_min":8.0,"t_opt_min":17.0,"t_opt_max":22.0,"t_max":27.0,"hr_seuil":95,"hr_duree":null,"hr_txt":"> 95 % avec rosée","eau_libre":true,"eau_txt":"OUI – rosée plusieurs heures","incubation":"7 à 12 jours","periode":"Printemps tardif (mai-juin pour fève)","alerte":"T° 17–22 °C + rosée prolongée + fève en fleurs → variétés tolérantes, cuivre, étêter fèves","sources":"INRAE Ephytia ; ITAB"},{"nom":"Rouille haricot","pathogene":"Uromyces appendiculatus","cultures":["Haricot nain","Haricot à rame"],"cultures_txt":"Haricot nain, Haricot à rame","t_min":12.0,"t_opt_min":21.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":95,"hr_duree":10,"hr_txt":"> 95 % pendant > 10h","eau_libre":true,"eau_txt":"OUI – rosée ou pluie","incubation":"10 à 14 jours","periode":"Été humide (juillet–août)","alerte":"T° 21–25 °C + rosée nocturne > 10h → variétés résistantes, cuivre","sources":"INRAE Ephytia"},{"nom":"Cladosporiose tomate","pathogene":"Passalora fulva (ex Cladosporium fulvum)","cultures":["Tomate"],"cultures_txt":"Tomate (sous abri principalement)","t_min":10.0,"t_opt_min":22.0,"t_opt_max":24.0,"t_max":32.0,"hr_seuil":85,"hr_duree":12,"hr_txt":"> 85 % pendant > 12h","eau_libre":false,"eau_txt":"NON requise (mais favorise)","incubation":"10 à 12 jours","periode":"Printemps à été sous abri mal aéré","alerte":"T° 22–24 °C + HR > 85 % > 12h sous abri → AÉRATION impérative, variétés résistantes (gènes Cf)","sources":"INRAE Ephytia ; MAB16 2024"},{"nom":"Cladosporiose concombre","pathogene":"Cladosporium cucumerinum","cultures":["Concombre"],"cultures_txt":"Concombre (sous abri)","t_min":10.0,"t_opt_min":17.0,"t_opt_max":20.0,"t_max":28.0,"hr_seuil":85,"hr_duree":null,"hr_txt":"> 85 % prolongée","eau_libre":true,"eau_txt":"OUI – feuillage humide favorable","incubation":"7 à 14 jours","periode":"Printemps frais humide sous abri","alerte":"T° 17–20 °C + HR > 85 % + nuits fraîches sous abri → AÉRATION + chauffage si possible","sources":"INRAE Ephytia"},{"nom":"Verticilliose","pathogene":"Verticillium dahliae / V. albo-atrum","cultures":["Tomate","Aubergine","Poivron","Piment","Pomme de terre","Fraisier","Olivier"],"cultures_txt":"Tomate, Aubergine, Poivron, Piment, Pomme de terre, Fraisier, Olivier","t_min":12.0,"t_opt_min":21.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol frais et humide","eau_libre":false,"eau_txt":"NON aérienne ; sol bien drainé indispensable","incubation":"3 à 8 semaines (longue infection latente)","periode":"Printemps doux + sol frais (mai–juin) ; expression été","alerte":"T° sol 21–25 °C + sol frais + plantes hôtes (morelle noire, amarante) → variétés résistantes, greffe sur porte-greffe ; biner/butter pour racines secondaires","sources":"INRAE Ephytia ; ITAB ; MAB16 2024"},{"nom":"Fusariose vasculaire tomate","pathogene":"Fusarium oxysporum f. sp. lycopersici","cultures":["Tomate"],"cultures_txt":"Tomate (très spécifique : f.sp. lycopersici)","t_min":18.0,"t_opt_min":27.0,"t_opt_max":28.0,"t_max":32.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol acide (pH 5-5,6) + humide","eau_libre":false,"eau_txt":"NON aérienne","incubation":"2 à 4 semaines","periode":"Été chaud ; sous abri T° élevées prolongées","alerte":"T° sol > 25 °C + sol acide → greffe sur porte-greffe résistant (KNVF), rotation, chaulage si pH bas","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Fusariose melon / concombre","pathogene":"Fusarium oxysporum f. sp. melonis / cucumerinum","cultures":["Melon","Concombre","Pastèque"],"cultures_txt":"Melon, Concombre, Pastèque (souches spécifiques)","t_min":18.0,"t_opt_min":24.0,"t_opt_max":28.0,"t_max":32.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide chaud","eau_libre":false,"eau_txt":"NON aérienne","incubation":"2 à 4 semaines","periode":"Été (sous abri toute l'année si T° élevée)","alerte":"T° sol 24–28 °C + cultures répétées → greffe sur Cucurbita ('Shintosa'), rotation 5+ ans, désinfection à la vapeur","sources":"INRAE Ephytia ; ITAB"},{"nom":"Fusariose oignon / poireau","pathogene":"Fusarium oxysporum f. sp. cepae / proliferatum","cultures":["Oignon","Échalote","Ail","Poireau"],"cultures_txt":"Oignon, Échalote, Ail, Poireau","t_min":15.0,"t_opt_min":25.0,"t_opt_max":28.0,"t_max":32.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide chaud","eau_libre":false,"eau_txt":"NON aérienne","incubation":"3 à 6 semaines","periode":"Fin d'été ; conservation","alerte":"T° sol > 25 °C + irrigation excessive → bulbilles saines, rotation longue, séchage soigné","sources":"INRAE Ephytia ; ITAB"},{"nom":"Fusariose pois / fève","pathogene":"Fusarium solani / F. oxysporum f. sp. pisi","cultures":["Pois","Pois mangetout","Fève","Pois chiche"],"cultures_txt":"Pois, Pois mangetout, Fève, Pois chiche","t_min":15.0,"t_opt_min":22.0,"t_opt_max":28.0,"t_max":32.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide compacté","eau_libre":false,"eau_txt":"NON aérienne","incubation":"2 à 4 semaines","periode":"Été ; cultures répétées","alerte":"T° sol > 22 °C + sol compact + rotation courte → rotation 5+ ans, drainage, semences certifiées","sources":"INRAE Ephytia ; ITAB Grandes cultures"},{"nom":"Pythium (fonte des semis)","pathogene":"Pythium ultimum / P. aphanidermatum","cultures":["Tous semis : tomate","concombre","salades","choux","fèves"],"cultures_txt":"Tous semis : tomate, concombre, salades, choux, fèves...","t_min":8.0,"t_opt_min":15.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Substrat ou sol saturé en eau","eau_libre":true,"eau_txt":"OUI – sol détrempé indispensable","incubation":"3 à 10 jours","periode":"Toute année (semis sous abri, terreau saturé)","alerte":"Substrat saturé d'eau + T° 15–25 °C + semis denses → substrat sain, semis aérés, arrosage modéré, surveiller fonte","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Rhizoctone brun","pathogene":"Rhizoctonia solani","cultures":["Carotte","Pomme de terre","Haricot","Laitue","Brassicacées"],"cultures_txt":"Carotte, Pomme de terre, Haricot, Laitue, Brassicacées","t_min":8.0,"t_opt_min":15.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide en surface + chaleur","eau_libre":true,"eau_txt":"OUI à la surface du sol","incubation":"5 à 14 jours","periode":"Printemps frais ; été chaud humide","alerte":"Humidité de surface persistante + adventices hôtes (amarante, rumex, pissenlit) → semences/plants sains, paillage, désherbage strict","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Rhizoctone violet","pathogene":"Helicobasidium purpureum / Rhizoctonia crocorum","cultures":["Carotte","Asperge","Betterave","Pomme de terre","Luzerne"],"cultures_txt":"Carotte, Asperge, Betterave, Pomme de terre, Luzerne","t_min":12.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide","eau_libre":true,"eau_txt":"OUI au sol","incubation":"Long (> 1 mois pour symptômes)","periode":"Été (juillet–septembre)","alerte":"Parcelles humides + précédents Apiacées/Asparagacées → rotation 6+ ans, drainage","sources":"INRAE Ephytia ; FREDON"},{"nom":"Hernie du chou","pathogene":"Plasmodiophora brassicae","cultures":["Tous choux","Navet","Radis","Roquette","Pak choï","Bok choï"],"cultures_txt":"Tous choux, Navet, Radis, Roquette, Pak choï, Bok choï","t_min":12.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol humide acide (pH < 7)","eau_libre":true,"eau_txt":"OUI au sol – spores nagent dans l'eau","incubation":"3 à 6 semaines","periode":"Toute saison si sol contaminé (persiste 7–10 ans!)","alerte":"pH sol < 7 + sol humide + précédent brassicacée → chaulage (pH > 7), rotation 7+ ans, drainage, semis tardifs","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Pourriture blanche alliacées","pathogene":"Sclerotium cepivorum / Stromatinia cepivora","cultures":["Oignon","Échalote","Ail","Poireau"],"cultures_txt":"Oignon, Échalote, Ail, Poireau","t_min":9.0,"t_opt_min":15.0,"t_opt_max":20.0,"t_max":24.0,"hr_seuil":null,"hr_duree":null,"hr_txt":"Sol frais et humide","eau_libre":false,"eau_txt":"Préférée au sol","incubation":"4 à 8 semaines","periode":"Printemps frais ; T° fraîches favorisent","alerte":"T° sol 15–20 °C + sol humide + sclérotes présents (persistent 5+ ans) → rotation 7+ ans, éviter parcelles à antécédents","sources":"INRAE Ephytia ; ITAB"},{"nom":"Bactériose graisse (Pseudomonas)","pathogene":"Pseudomonas syringae (diverses pv.)","cultures":["Haricot","Pois","Tomate","Concombre","Chou"],"cultures_txt":"Haricot, Pois, Tomate, Concombre, Chou (Pseudomonas)","t_min":4.0,"t_opt_min":20.0,"t_opt_max":25.0,"t_max":30.0,"hr_seuil":90,"hr_duree":null,"hr_txt":"> 90 % avec pluie/aspersion","eau_libre":true,"eau_txt":"OUI – essentielle (ruissellement, éclaboussures)","incubation":"5 à 10 jours","periode":"Printemps doux humide ; été pluvieux","alerte":"T° 20–25 °C + pluies orageuses + aspersion → INTERDIRE aspersion, semences certifiées, cuivre préventif après grêle","sources":"INRAE Ephytia ; ITAB ; MAB16 2024"},{"nom":"Nervation noire / pourriture noire chou","pathogene":"Xanthomonas campestris pv. campestris","cultures":["Tous choux","Navet","Radis","Roquette"],"cultures_txt":"Tous choux, Navet, Radis, Roquette","t_min":5.0,"t_opt_min":25.0,"t_opt_max":30.0,"t_max":35.0,"hr_seuil":90,"hr_duree":null,"hr_txt":"> 90 % avec pluie/aspersion","eau_libre":true,"eau_txt":"OUI – essentielle (pénétration par stomates et hydathodes)","incubation":"10 à 14 jours","periode":"Été chaud humide (juillet–août)","alerte":"T° 25–30 °C + pluies orageuses + plants stressés → semences certifiées (traitement thermique 50°C/30min), rotation, cuivre préventif","sources":"INRAE Ephytia ; ITAB ; MAB16 2024"},{"nom":"Bactériose tomate (chancre, gale)","pathogene":"Clavibacter michiganensis ; Xanthomonas vesicatoria","cultures":["Tomate","Poivron","Piment"],"cultures_txt":"Tomate, Poivron, Piment","t_min":15.0,"t_opt_min":24.0,"t_opt_max":28.0,"t_max":32.0,"hr_seuil":85,"hr_duree":null,"hr_txt":"> 85 % avec aspersion","eau_libre":true,"eau_txt":"OUI – pénétration par blessures et stomates","incubation":"7 à 14 jours","periode":"Été ; sous abri si aspersion","alerte":"T° 24–28 °C + aspersion + blessures de taille → semences certifiées, désinfection outils, cuivre préventif","sources":"INRAE Ephytia ; ITAB"},{"nom":"Pourriture molle bactérienne","pathogene":"Pectobacterium carotovorum / Dickeya spp.","cultures":["Carotte","Pomme de terre","Salades","Choux","Céleri"],"cultures_txt":"Carotte, Pomme de terre, Salades, Choux, Céleri (conservation)","t_min":5.0,"t_opt_min":20.0,"t_opt_max":28.0,"t_max":35.0,"hr_seuil":95,"hr_duree":null,"hr_txt":"> 95 % + eau libre","eau_libre":true,"eau_txt":"OUI – essentielle pour pénétration","incubation":"2 à 5 jours (rapide)","periode":"Été chaud humide ; conservation chaude","alerte":"T° 20–28 °C + eau stagnante + blessures à la récolte → récolte sol ressuyé, séchage, stockage 0–4°C ventilé","sources":"INRAE Ephytia ; ITAB"},{"nom":"Virus de la mosaïque (CMV, ZYMV, WMV)","pathogene":"Cucumber Mosaic Virus / Zucchini Yellow / Watermelon Mosaic","cultures":["Cucurbitacées","Tomate","Poivron","Épinard","Salade"],"cultures_txt":"Cucurbitacées (toutes), Tomate, Poivron, Épinard, Salade","t_min":null,"t_opt_min":null,"t_opt_max":null,"t_max":null,"hr_seuil":null,"hr_duree":null,"hr_txt":"Non directe (via vecteurs)","eau_libre":false,"eau_txt":"NON requise","incubation":"7 à 21 jours après inoculation","periode":"Vols de pucerons : printemps + été (T° > 15 °C)","alerte":"Vols pucerons (T° > 15 °C + jour ensoleillé) → panneaux jaunes, savon noir, filet insect-proof, éliminer adventices hôtes","sources":"INRAE Ephytia ; ITAB ; MAB16"},{"nom":"Virus du bronzé tomate (TSWV) / TYLCV","pathogene":"Tomato Spotted Wilt Virus / Tomato Yellow Leaf Curl Virus","cultures":["Tomate","Poivron","Piment","Aubergine","Salade"],"cultures_txt":"Tomate, Poivron, Piment, Aubergine, Salade (TSWV)","t_min":null,"t_opt_min":null,"t_opt_max":null,"t_max":null,"hr_seuil":null,"hr_duree":null,"hr_txt":"Non directe (via vecteurs)","eau_libre":false,"eau_txt":"NON requise","incubation":"10 à 20 jours après inoculation","periode":"Thrips actifs (T° 23–30°C) pour TSWV ; aleurodes pour TYLCV","alerte":"T° 23–30 °C + activité thrips/aleurodes → PBI Orius, filet insect-proof maille 0,2mm, hygrométrie élevée","sources":"INRAE Ephytia ; ITAB"},{"nom":"Virus de la mosaïque du tabac (TMV/ToMV/ToBRFV)","pathogene":"Tobacco Mosaic Virus / Tomato Brown Rugose Fruit Virus","cultures":["Tomate","Poivron","Piment","Aubergine"],"cultures_txt":"Tomate, Poivron, Piment, Aubergine","t_min":null,"t_opt_min":null,"t_opt_max":null,"t_max":null,"hr_seuil":null,"hr_duree":null,"hr_txt":"Non directe (transmission mécanique)","eau_libre":false,"eau_txt":"NON requise","incubation":"5 à 15 jours","periode":"Toute saison (transmis par contact direct, outils, mains)","alerte":"Pas de seuil climatique – DÉSINFECTION outils impérative + semences certifiées + retrait plants infectés ; ToBRFV très contagieux (semences, contacts, eau)","sources":"INRAE Ephytia ; ANSES ; MAB16 2024"}]};
+const FAM_COLORS = {"Alliacées": "#7b5ea7", "Autres": "#6b7b8a", "Choux & brassicacées": "#2e7d6e", "Cucurbitacées": "#3a8a3e", "Légumes-feuilles": "#4a8c5c", "Légumineuses": "#8a6b3a", "Racines": "#c47a3a", "Solanacées": "#b04040"};
+const CULTURES_KEY = 'planche-mes-cultures';
+const ACTIONS_TERRAIN = {"Mildiou tomate / pomme de terre":{"type":"preventif","quoi":"Traiter au cuivre (bouillie bordelaise 10-20 g/L). Effeuiller les feuilles basses. Pailler le sol pour limiter les éclaboussures.","quand":"Dès l'alerte, dans les 48h AVANT la pluie. Renouveler après chaque pluie > 20 mm."},"Mildiou salade":{"type":"preventif","quoi":"Privilégier les variétés résistantes Bremia. Traiter au cuivre en préventif. Espacer les plants pour favoriser l'aération.","quand":"Dès que les nuits fraîches (5-10 °C) alternent avec des jours doux et humides. Traiter avant l'épisode pluvieux."},"Mildiou cucurbitacées":{"type":"preventif","quoi":"Cuivre préventif (bouillie bordelaise). Éviter l'arrosage par aspersion. Pailler le sol.","quand":"Dès apparition de rosée matinale persistante. Traiter le soir avant une nuit humide annoncée."},"Mildiou oignon / poireau":{"type":"preventif","quoi":"Traiter au cuivre. Écarter les rangs pour ventiler le feuillage. Réduire l'azote.","quand":"Après 2-3 jours consécutifs de nuits humides (HR > 95 %) et jours frais (10-18 °C)."},"Mildiou épinard":{"type":"preventif","quoi":"Choisir des variétés résistantes. Cuivre en préventif si variété sensible. Aérer sous abri.","quand":"Dès que l'humidité dépasse 85 % pendant plus de 8h par temps frais."},"Pourriture grise (Botrytis)":{"type":"preventif","quoi":"Aérer le tunnel/serre impérativement. Retirer les débris végétaux et fruits abîmés. Ne pas mouiller le feuillage.","quand":"Immédiatement. Aérer dès le matin pour chasser la condensation nocturne."},"Sclerotinia (pourriture blanche)":{"type":"preventif","quoi":"Drainer les zones basses. Pailler pour isoler le feuillage du sol. CONTANS WG (Coniothyrium minitans) en préventif sur sol.","quand":"Avant la période à risque si sol gorgé d'eau depuis plus de 5 jours."},"Oïdium des cucurbitacées":{"type":"preventif","quoi":"Soufre mouillable préventif (7,5 g/L, max 30 °C sinon brûlure). Bien arroser au pied pour éviter le stress hydrique.","quand":"Dès les premières chaleurs sèches en journée. Traiter le matin tôt ou le soir."},"Oïdium tomate":{"type":"preventif","quoi":"Soufre micronisé en poudrage ou mouillable. Maintenir un arrosage régulier (le stress hydrique favorise l'oïdium).","quand":"Dès les premiers signes de stress hydrique par temps chaud et sec."},"Alternariose tomate / pomme de terre":{"type":"preventif","quoi":"Cuivre préventif. Éliminer les feuilles basses touchées. Pailler le sol. Éviter l'aspersion.","quand":"Traiter avant un épisode de rosées matinales répétées, surtout sur plantes stressées ou âgées."},"Alternariose carotte / panais":{"type":"preventif","quoi":"Cuivre préventif. Arrêter l'aspersion en fin de culture. Récolter avant que le feuillage ne se dégrade trop.","quand":"Dès que les rosées nocturnes dépassent 8h, surtout sur plantes âgées en fin de cycle."},"Alternariose brassicacées":{"type":"preventif","quoi":"Utiliser des semences traitées (vinaigre ou eau chaude 50 °C/20 min). Cuivre en préventif. Rotation longue.","quand":"Dès que HR > 90 % pendant plus de 8h, surtout par temps chaud (20-25 °C)."},"Cercosporiose betterave":{"type":"curatif","quoi":"Cuivre préventif dès les 1ères taches. Supprimer les feuilles atteintes. Élargir les inter-rangs.","quand":"Traiter dès apparition des premières taches rondes gris-brun, surtout après des orages d'été."},"Septoriose céleri":{"type":"preventif","quoi":"Cuivre préventif AVANT l'orage annoncé. Éviter l'aspersion. Réduire la densité de plantation.","quand":"48h avant un orage annoncé en été/automne. Ne pas attendre les symptômes."},"Septoriose tomate":{"type":"preventif","quoi":"Cuivre préventif. Pailler le sol (mulch) pour éviter les éclaboussures. Effeuiller les feuilles basses.","quand":"Après 48h de feuillage humide continu, ou dès que des pluies répétées sont annoncées."},"Anthracnose haricot":{"type":"preventif","quoi":"INTERDIRE l'aspersion. Utiliser des semences certifiées. Cuivre préventif. Ne pas toucher les plants mouillés.","quand":"Dès l'annonce de pluies par temps frais (17-22 °C). Ne jamais récolter ou désherber sur feuillage mouillé."},"Anthracnose cucurbitacées":{"type":"preventif","quoi":"Passer au goutte-à-goutte (impératif). Cuivre préventif. Rotation 3 ans minimum.","quand":"Avant les pluies orageuses d'été (22-27 °C). Traiter le soir avant l'épisode."},"Ascochytose pois chiche":{"type":"preventif","quoi":"Cuivre préventif. Rotation longue (5 ans minimum, pathogène très persistant). Semences certifiées.","quand":"Dès 5 jours de pluies répétées annoncées. Maladie très difficile à enrayer une fois installée."},"Rouille du poireau":{"type":"preventif","quoi":"Cuivre préventif. Réduire la fertilisation azotée. Espacer les plants pour aérer.","quand":"Dès que les rosées nocturnes deviennent prolongées par temps frais (10-18 °C)."},"Rouille fève / pois":{"type":"preventif","quoi":"Choisir des variétés tolérantes. Cuivre préventif. Étêter les fèves dès la pleine floraison (réduit l'humidité).","quand":"Au stade floraison si rosées prolongées et T° 17-22 °C."},"Rouille haricot":{"type":"preventif","quoi":"Variétés résistantes en priorité. Cuivre en préventif si variété sensible.","quand":"Dès que les rosées nocturnes dépassent 10h par temps chaud (21-25 °C)."},"Cladosporiose tomate":{"type":"preventif","quoi":"AÉRER le tunnel/serre (impératif, ouvrir les ouvrants dès le matin). Choisir des variétés résistantes (gènes Cf). Effeuiller.","quand":"Immédiatement. Sous abri, dès que HR > 85 % pendant plus de 12h."},"Cladosporiose concombre":{"type":"preventif","quoi":"Aérer le tunnel. Chauffer si possible pour assécher l'air. Éviter les plants trop serrés.","quand":"Dès les nuits fraîches sous abri avec HR > 85 %. Aérer même si température extérieure basse."},"Verticilliose":{"type":"surveillance","quoi":"Utiliser des variétés résistantes ou greffer sur porte-greffe résistant. Biner et butter pour favoriser les racines secondaires. Arracher les adventices hôtes (morelle noire, amarante).","quand":"Pas de traitement curatif possible. Prévenir avant plantation par le choix variétal et la gestion du sol."},"Fusariose vasculaire tomate":{"type":"surveillance","quoi":"Greffer sur porte-greffe résistant (KNVF). Rotation longue. Chauler si sol acide (pH < 6,5).","quand":"Pas de traitement curatif. Décision à prendre AVANT la plantation (choix variétal, greffe, correction pH)."},"Fusariose melon / concombre":{"type":"surveillance","quoi":"Greffer sur porte-greffe Cucurbita ('Shintosa'). Rotation 5 ans minimum. Désinfection vapeur si possible.","quand":"Décision avant la plantation. Si symptômes en culture : arracher les pieds atteints, ne pas repiquer au même endroit."},"Fusariose oignon / poireau":{"type":"surveillance","quoi":"Utiliser des bulbilles saines certifiées. Rotation longue. Sécher soigneusement les récoltes. Éviter l'excès d'irrigation.","quand":"Prévention avant plantation. En culture : surveiller le jaunissement du feuillage, arracher les pieds suspects."},"Fusariose pois / fève":{"type":"surveillance","quoi":"Rotation 5 ans minimum. Drainer les sols compacts. Semences certifiées uniquement.","quand":"Décision avant semis. En culture : surveiller le flétrissement, arracher les pieds atteints."},"Pythium (fonte des semis)":{"type":"preventif","quoi":"Utiliser un substrat sain (neuf ou désinfecté). Semer clair (pas trop dense). Arroser modérément. Ventiler les plaques de semis.","quand":"Au moment du semis. Surveiller les 10 premiers jours. Si fonte constatée : arrêter l'arrosage, ventiler, ressemer."},"Rhizoctone brun":{"type":"preventif","quoi":"Plants et semences sains. Pailler le sol pour éviter le contact terre/feuillage. Désherber strictement (amarante, rumex, pissenlit sont hôtes).","quand":"Avant et pendant la culture, dès que l'humidité de surface est persistante."},"Rhizoctone violet":{"type":"surveillance","quoi":"Rotation 6 ans minimum après carottes/asperges. Drainer les parcelles humides.","quand":"Décision avant implantation. En culture : surveiller le collet, arracher les pieds suspects."},"Hernie du chou":{"type":"preventif","quoi":"Chauler le sol (viser pH > 7). Rotation 7 ans minimum entre brassicacées. Drainer. Retarder les semis si possible.","quand":"AVANT la plantation. Si hernie déjà présente : ne plus planter de choux sur la parcelle pendant 7 ans."},"Pourriture blanche alliacées":{"type":"surveillance","quoi":"Rotation 7 ans minimum. Ne jamais replanter d'alliacées sur une parcelle contaminée. Les sclérotes persistent plus de 5 ans dans le sol.","quand":"Décision avant plantation. Éviter toute parcelle avec antécédents. Pas de traitement curatif efficace."},"Bactériose graisse (Pseudomonas)":{"type":"preventif","quoi":"INTERDIRE l'aspersion. Semences certifiées. Cuivre préventif après grêle ou orage. Ne pas travailler sur feuillage mouillé.","quand":"Traiter au cuivre dans les 24h après un orage ou un épisode de grêle."},"Nervation noire / pourriture noire chou":{"type":"preventif","quoi":"Semences certifiées (traitement thermique 50 °C/30 min). Rotation. Cuivre préventif.","quand":"Avant et après les pluies orageuses d'été par forte chaleur (25-30 °C)."},"Bactériose tomate (chancre, gale)":{"type":"preventif","quoi":"Semences certifiées. Désinfecter les outils de taille (alcool ou javel). Cuivre préventif. Éviter l'aspersion.","quand":"Après chaque taille ou effeuillage. Traiter au cuivre avant un épisode pluvieux chaud (24-28 °C)."},"Pourriture molle bactérienne":{"type":"preventif","quoi":"Récolter uniquement sur sol ressuyé (jamais détrempé). Sécher les légumes avant stockage. Stocker à 0-4 °C avec ventilation.","quand":"À la récolte et au stockage. Éviter toute blessure lors de la manipulation."},"Virus de la mosaïque (CMV, ZYMV, WMV)":{"type":"preventif","quoi":"Installer des panneaux jaunes englués (piège pucerons). Savon noir en pulvérisation. Filet insect-proof sur jeunes plants. Éliminer les adventices hôtes autour des parcelles.","quand":"Dès les premiers vols de pucerons (jours ensoleillés > 15 °C). Poser les filets AVANT les vols."},"Virus du bronzé tomate (TSWV) / TYLCV":{"type":"preventif","quoi":"Installer des auxiliaires (Orius contre thrips). Filet insect-proof maille 0,2 mm. Maintenir une hygrométrie élevée sous abri (défavorable aux thrips).","quand":"Dès la plantation sous abri. Surveiller les thrips dès que T° > 23 °C."},"Virus de la mosaïque du tabac (TMV/ToMV/ToBRFV)":{"type":"preventif","quoi":"Désinfecter les outils et les mains (lait écrémé ou savon) entre chaque plant. Semences certifiées uniquement. Arracher et détruire immédiatement tout plant infecté. Le ToBRFV est extrêmement contagieux.","quand":"À chaque intervention sur les plants. Pas de traitement curatif : la prévention est la seule arme."}};
+
+// ============ INDEX ESPÈCES ============
+const especes = {};
+DATA.plantation.forEach(p => { especes[p.espece] = especes[p.espece] || { famille: p.famille, espece: p.espece }; especes[p.espece].plant = p; });
+DATA.semis.forEach(s => { especes[s.espece] = especes[s.espece] || { famille: s.famille, espece: s.espece }; especes[s.espece].semis = s; });
+DATA.fertilite.forEach(f => { especes[f.espece] = especes[f.espece] || { famille: f.famille, espece: f.espece }; especes[f.espece].fert = f; });
+DATA.maladies.forEach(m => {
+  let fam = m.famille.replace('Curcubitacées','Cucurbitacées');
+  especes[m.espece] = especes[m.espece] || { famille: fam, espece: m.espece };
+  especes[m.espece].mal = m;
+});
+const sortedEspeces = Object.values(especes).sort((a,b) => a.espece.localeCompare(b.espece,'fr'));
+const families = [...new Set(sortedEspeces.map(e => e.famille))].sort((a,b) => a.localeCompare(b,'fr'));
+
+function famColor(f) { return FAM_COLORS[f] || '#6b7b8a'; }
+
+// ============ MES CULTURES (sélection) ============
+let mesCultures = new Set();
+function loadCultures() {
+  try {
+    const s = localStorage.getItem(CULTURES_KEY);
+    if (s) mesCultures = new Set(JSON.parse(s));
+  } catch(e){}
+}
+function saveCultures() {
+  try { localStorage.setItem(CULTURES_KEY, JSON.stringify([...mesCultures])); } catch(e){}
+}
+loadCultures();
+
+function renderCulturesSection() {
+  // Appelée dans renderMeteo, insérée après la barre de localisation
+  let html = `<div class="cultures-section">
+    <h4><span class="ico">🌱</span> Mes cultures en place</h4>
+    <div class="cultures-grid">`;
+  sortedEspeces.forEach(e => {
+    const active = mesCultures.has(e.espece);
+    html += `<button class="culture-chk${active?' active':''}" data-esp="${e.espece}" onclick="toggleCulture('${e.espece.replace(/'/g,"\\'")}')">
+      <span class="dot" style="background:${famColor(e.famille)}"></span>${e.espece}
+    </button>`;
+  });
+  html += `</div>
+    <div class="cultures-actions">
+      <button onclick="selectAllCultures()">Tout cocher</button>
+      <button onclick="clearCultures()">Tout décocher</button>
+    </div>
+    <p style="font-size:11px;color:rgba(26,31,18,.5);margin-top:8px;font-style:italic">Seules les alertes concernant vos cultures cochées seront affichées.</p>
+  </div>`;
+  return html;
+}
+
+function toggleCulture(esp) {
+  if (mesCultures.has(esp)) mesCultures.delete(esp);
+  else mesCultures.add(esp);
+  saveCultures();
+  // Re-render si météo chargée
+  if (currentLoc && currentForecast) renderMeteo(currentLoc, currentForecast);
+}
+function selectAllCultures() {
+  sortedEspeces.forEach(e => mesCultures.add(e.espece));
+  saveCultures();
+  if (currentLoc && currentForecast) renderMeteo(currentLoc, currentForecast);
+}
+function clearCultures() {
+  mesCultures.clear();
+  saveCultures();
+  if (currentLoc && currentForecast) renderMeteo(currentLoc, currentForecast);
+}
+
+// ============ TABS ============
+function go(view) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+view));
+  if (view === 'especes') showList();
+  if (view === 'meteo') initMeteo();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.view)));
+
+// ============ ESPÈCES LIST ============
+let currentFamily = null;
+let currentQuery = '';
+function renderChips() {
+  const wrap = document.getElementById('family-chips');
+  wrap.innerHTML = '';
+  const all = document.createElement('button');
+  all.className = 'chip' + (currentFamily === null ? ' active' : '');
+  all.style.background = currentFamily === null ? 'var(--green-d)' : '';
+  all.style.color = currentFamily === null ? '#fff' : '';
+  all.textContent = 'Toutes';
+  all.onclick = () => { currentFamily = null; renderChips(); renderList(); };
+  wrap.appendChild(all);
+  families.forEach(f => {
+    const b = document.createElement('button');
+    const c = famColor(f);
+    const active = currentFamily === f;
+    b.className = 'chip' + (active ? ' active' : '');
+    b.innerHTML = `<span class="dot" style="background:${c}"></span>${f}`;
+    if (active) { b.style.background = c; b.style.color = '#fff'; b.style.borderColor = c; }
+    b.onclick = () => { currentFamily = f; renderChips(); renderList(); };
+    wrap.appendChild(b);
+  });
+}
+function renderList() {
+  const wrap = document.getElementById('esp-list');
+  let list = sortedEspeces;
+  if (currentFamily) list = list.filter(e => e.famille === currentFamily);
+  if (currentQuery) {
+    const q = currentQuery.toLowerCase().trim();
+    list = list.filter(e =>
+      e.espece.toLowerCase().includes(q) ||
+      e.famille.toLowerCase().includes(q) ||
+      (e.mal && (e.mal.maladies.some(m => m.nom.toLowerCase().includes(q)) || e.mal.ravageurs.some(r => r.nom.toLowerCase().includes(q))))
+    );
+  }
+  if (!list.length) { wrap.innerHTML = '<div class="empty">Aucun résultat</div>'; return; }
+  wrap.innerHTML = list.map(e => `
+    <div class="list-item" data-esp="${encodeURIComponent(e.espece)}">
+      <div class="list-item-main">
+        <div class="list-item-name">${e.espece}</div>
+        <div class="list-item-fam" style="color:${famColor(e.famille)}"><span class="dot" style="background:${famColor(e.famille)}"></span>${e.famille}</div>
+      </div>
+      <div class="list-item-arrow">→</div>
+    </div>`).join('');
+  wrap.querySelectorAll('.list-item').forEach(el => { el.onclick = () => showFiche(decodeURIComponent(el.dataset.esp)); });
+}
+document.getElementById('search-esp').addEventListener('input', e => { currentQuery = e.target.value; renderList(); });
+function showList() {
+  document.getElementById('especes-list-wrap').style.display = '';
+  document.getElementById('esp-fiche-wrap').style.display = 'none';
+  renderChips(); renderList();
+}
+function showFiche(espName) {
+  const e = especes[espName]; if (!e) return;
+  const wrap = document.getElementById('esp-fiche-wrap');
+  const c = famColor(e.famille);
+  const climLiees = DATA.climat.filter(cl => cl.cultures.some(cu => cu.toLowerCase() === espName.toLowerCase()));
+  let html = `<div class="fiche"><div class="fiche-head" style="background:linear-gradient(180deg, ${c}12 0%, var(--paper) 100%)">
+    <button class="fiche-back" onclick="showList()">← Retour</button>
+    <div class="fiche-fam" style="color:${c}"><span class="dot" style="background:${c}"></span>${e.famille}</div>
+    <h2 class="fiche-name">${e.espece}</h2></div>`;
+  if (e.semis) html += `<div class="fiche-section"><h3>Semis</h3><dl class="kv">
+    <dt>Type</dt><dd>${e.semis.type_semis || '—'}</dd>
+    <dt>Mode</dt><dd>${e.semis.recommandation || '—'}</dd>
+    <dt>Profondeur</dt><dd><span class="num">${e.semis.profondeur || '—'}</span></dd></dl></div>`;
+  if (e.plant) html += `<div class="fiche-section"><h3>Densité de plantation</h3>
+    <div class="tag-row"><span class="tag tag-bio">Bio-intensif</span></div>
+    <dl class="kv" style="margin-bottom:14px">
+      <dt>Espacement</dt><dd>${e.plant.densite_bio || '—'}</dd>
+      <dt>Plants /m²</dt><dd><span class="num">${e.plant.plants_m2_bio_txt || '—'}</span></dd>
+      <dt>Rangs (1m)</dt><dd>${e.plant.rangs_bio || '—'}</dd></dl>
+    <div class="tag-row"><span class="tag tag-agro">Agrosemens</span></div>
+    <dl class="kv">
+      <dt>Espacement</dt><dd>${e.plant.densite_agro || '—'}</dd>
+      <dt>Plants /m²</dt><dd><span class="num">${e.plant.plants_m2_agro_txt || '—'}</span></dd>
+      <dt>Rangs (1m)</dt><dd>${e.plant.rangs_agro || '—'}</dd></dl></div>`;
+  if (e.fert && (e.fert.fertilisation || e.fert.compost)) html += `<div class="fiche-section"><h3>Fertilisation</h3><dl class="kv">
+    ${e.fert.fertilisation ? `<dt>NPK</dt><dd>${e.fert.fertilisation}</dd>`:''}
+    ${e.fert.compost ? `<dt>Compost</dt><dd>${e.fert.compost}</dd>`:''}
+    ${e.fert.commentaires ? `<dt>Note</dt><dd><em>${e.fert.commentaires}</em></dd>`:''}</dl></div>`;
+  if (e.mal && e.mal.maladies.length) {
+    html += `<div class="fiche-section"><h3>Maladies & lutte bio</h3>`;
+    e.mal.maladies.forEach(m => { html += `<div class="threat"><div class="threat-name">${m.nom}</div><div class="threat-fix">${m.lutte}</div></div>`; });
+    html += `</div>`;
+  }
+  if (e.mal && e.mal.ravageurs.length) {
+    html += `<div class="fiche-section"><h3>Ravageurs & lutte bio</h3>`;
+    e.mal.ravageurs.forEach(r => { html += `<div class="threat"><div class="threat-name">${r.nom}</div><div class="threat-fix">${r.lutte}</div></div>`; });
+    html += `</div>`;
+  }
+  if (climLiees.length) {
+    html += `<div class="fiche-section"><h3>Seuils climatiques</h3>`;
+    climLiees.forEach(cl => {
+      html += `<div class="threat"><div class="threat-name">${cl.nom}</div>
+        <div class="threat-fix"><strong>T° opt :</strong> ${cl.t_opt_min??'?'}–${cl.t_opt_max??'?'} °C · <strong>HR :</strong> ${cl.hr_txt || '—'}
+        ${cl.alerte ? `<br><em>${cl.alerte}</em>` : ''}</div></div>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+  wrap.innerHTML = html;
+  document.getElementById('especes-list-wrap').style.display = 'none';
+  wrap.style.display = '';
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ============ CALC FERT ============
+function populateEspSelect(selectId, filterFn) {
+  const sel = document.getElementById(selectId);
+  sel.innerHTML = '';
+  const byFam = {};
+  sortedEspeces.filter(filterFn).forEach(e => { byFam[e.famille] = byFam[e.famille] || []; byFam[e.famille].push(e); });
+  Object.keys(byFam).sort().forEach(fam => {
+    const og = document.createElement('optgroup'); og.label = fam;
+    byFam[fam].forEach(e => { const o = document.createElement('option'); o.value = e.espece; o.textContent = e.espece; og.appendChild(o); });
+    sel.appendChild(og);
+  });
+}
+populateEspSelect('ft-esp', e => e.fert && (e.fert.N_min || e.fert.P_min || e.fert.K_min || e.fert.Comp_min));
+function updateSurface(longId, largId, surfId) {
+  const L = parseFloat(document.getElementById(longId).value) || 0;
+  const l = parseFloat(document.getElementById(largId).value) || 0;
+  const s = +(L * l).toFixed(2);
+  document.getElementById(surfId).textContent = s;
+  return s;
+}
+function updateFert() {
+  const surf = updateSurface('ft-long','ft-larg','ft-surf');
+  const espName = document.getElementById('ft-esp').value;
+  const e = especes[espName]; if (!e || !e.fert) { document.getElementById('ft-result').innerHTML = ''; return; }
+  const f = e.fert;
+  function calc(min, max, factor) {
+    if (min == null && max == null) return null;
+    return { min: (min || 0) * factor * surf, max: (max || 0) * factor * surf };
+  }
+  const N = calc(f.N_min, f.N_max, 0.1);
+  const P = calc(f.P_min, f.P_max, 0.1);
+  const K = calc(f.K_min, f.K_max, 0.1);
+  const C = calc(f.Comp_min, f.Comp_max, 0.1);
+  function fmt(r, unit) {
+    if (!r) return '—';
+    if (r.min === 0 && r.max === 0) return `<span style="color:rgba(26,31,18,.5)">—</span>`;
+    const rnd = v => v >= 100 ? Math.round(v) : v >= 10 ? Math.round(v*10)/10 : Math.round(v*100)/100;
+    return (r.min === r.max ? `${rnd(r.min)}` : `${rnd(r.min)}–${rnd(r.max)}`) + `<small>${unit}</small>`;
+  }
+  document.getElementById('ft-result').innerHTML = `
+    <div class="result-row"><span class="lbl">Azote (N)</span><span class="val">${fmt(N,'g')}</span></div>
+    <div class="result-row"><span class="lbl">Phosphore (P)</span><span class="val">${fmt(P,'g')}</span></div>
+    <div class="result-row"><span class="lbl">Potassium (K)</span><span class="val">${fmt(K,'g')}</span></div>
+    <div class="result-row"><span class="lbl">Compost</span><span class="val">${fmt(C,'kg')}</span></div>
+    ${f.fertilisation ? `<div class="result-row" style="border-bottom:none;padding-top:14px"><span class="lbl" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase">Réf. ha</span><span class="val" style="font-size:12px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;text-align:right;max-width:65%">${f.fertilisation}</span></div>`:''}
+    ${f.compost ? `<div class="result-row" style="border-bottom:none"><span class="lbl" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase">Amendement</span><span class="val" style="font-size:12px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;text-align:right;max-width:65%">${f.compost}</span></div>`:''}
+    ${f.commentaires ? `<div class="result-row" style="border-bottom:none;color:var(--rust)"><span class="lbl" style="font-style:italic">${f.commentaires}</span></div>`:''}`;
+}
+['ft-long','ft-larg','ft-esp'].forEach(id => {
+  document.getElementById(id).addEventListener('input', updateFert);
+  document.getElementById(id).addEventListener('change', updateFert);
+});
+
+// ============ MÉTÉO + ALERTES ============
+const STORAGE_KEY = 'planche-meteo-loc';
+let currentLoc = null;
+let currentForecast = null;
+
+function loadStoredLoc() {
+  try { const s = localStorage.getItem(STORAGE_KEY); if (s) return JSON.parse(s); } catch(e){}
+  return null;
+}
+function saveLoc(loc) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(loc)); } catch(e){}
+}
+
+function initMeteo() {
+  const stored = loadStoredLoc();
+  if (stored) { currentLoc = stored; showMeteoForLoc(stored); }
+  else { document.getElementById('setup-block').style.display = ''; document.getElementById('meteo-loaded').style.display = 'none'; }
+}
+
+function useGeolocation() {
+  if (!navigator.geolocation) { alert("Géolocalisation non disponible."); return; }
+  const btn = event.target;
+  btn.disabled = true; btn.textContent = '📍 Localisation en cours…';
+  navigator.geolocation.getCurrentPosition(
+    async pos => {
+      const lat = pos.coords.latitude, lon = pos.coords.longitude;
+      let name = `${lat.toFixed(3)}, ${lon.toFixed(3)}`;
+      try {
+        const r = await fetch(`https://geocoding-api.open-meteo.com/v1/reverse?latitude=${lat}&longitude=${lon}&language=fr&format=json`);
+        if (r.ok) { const j = await r.json(); if (j.results && j.results[0]) { const c = j.results[0]; name = c.name + (c.admin2 ? ', '+c.admin2 : c.admin1 ? ', '+c.admin1 : ''); } }
+      } catch(e){}
+      const loc = { lat, lon, name };
+      saveLoc(loc); currentLoc = loc; showMeteoForLoc(loc);
+    },
+    err => {
+      btn.disabled = false; btn.textContent = '📍 Utiliser ma position GPS';
+      alert("Impossible d'obtenir la position. Saisissez une commune à la place.");
+    },
+    { enableHighAccuracy:false, timeout:15000, maximumAge:600000 }
+  );
+}
+
+async function searchCommune() {
+  const q = document.getElementById('commune-q').value.trim();
+  if (q.length < 2) return;
+  const wrap = document.getElementById('commune-results');
+  wrap.innerHTML = '<div class="loader" style="color:rgba(244,239,228,.7);padding:14px">recherche</div>';
+  try {
+    const r = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=fr&format=json`);
+    const j = await r.json();
+    if (!j.results || !j.results.length) { wrap.innerHTML = '<div class="commune-result" style="cursor:default;opacity:.6">Aucune commune trouvée</div>'; return; }
+    wrap.innerHTML = '';
+    wrap.className = 'commune-results';
+    j.results.forEach(c => {
+      const b = document.createElement('button');
+      b.className = 'commune-result';
+      b.innerHTML = `<strong>${c.name}</strong><em>${[c.admin2, c.admin1, c.country].filter(Boolean).join(' · ')}</em>`;
+      b.onclick = () => {
+        const loc = { lat: c.latitude, lon: c.longitude, name: c.name + (c.admin1 ? ', '+c.admin1 : '') };
+        saveLoc(loc); currentLoc = loc; showMeteoForLoc(loc);
+      };
+      wrap.appendChild(b);
+    });
+  } catch(e) { wrap.innerHTML = `<div class="error-box">Erreur : ${e.message}</div>`; }
+}
+document.getElementById('commune-q').addEventListener('keydown', e => { if (e.key === 'Enter') searchCommune(); });
+
+async function showMeteoForLoc(loc) {
+  document.getElementById('setup-block').style.display = 'none';
+  const wrap = document.getElementById('meteo-loaded');
+  wrap.style.display = '';
+  wrap.innerHTML = `<div class="loader">Chargement des prévisions pour ${loc.name}</div>`;
+  try {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&forecast_days=7&timezone=auto`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Météo indisponible (HTTP '+r.status+')');
+    const j = await r.json();
+    currentForecast = j;
+    renderMeteo(loc, j);
+  } catch(e) {
+    wrap.innerHTML = `<div class="error-box">${e.message}<br><br><button class="btn btn-ghost" onclick="initMeteo()">Réessayer</button></div>
+      <div style="margin-top:14px"><button class="btn btn-ghost" onclick="resetLoc()">Changer de position</button></div>`;
+  }
+}
+
+function resetLoc() {
+  try { localStorage.removeItem(STORAGE_KEY); } catch(e){}
+  currentLoc = null; currentForecast = null;
+  document.getElementById('setup-block').style.display = '';
+  document.getElementById('meteo-loaded').style.display = 'none';
+  document.getElementById('commune-results').innerHTML = '';
+  document.getElementById('commune-q').value = '';
+  document.getElementById('tab-badge').style.display = 'none';
+}
+
+function computeDailyStats(forecast) {
+  const hours = forecast.hourly;
+  const days = forecast.daily.time;
+  const byDay = {};
+  days.forEach(d => byDay[d] = { date:d, t_max:null, t_min:null, hr_max:null, hr_min:null, hr_avg:0,
+                                  hours_hr_85:0, hours_hr_90:0, hours_hr_95:0, hours_wet:0, rain:0, rain_hours:0 });
+  for (let i=0; i<hours.time.length; i++) {
+    const d = hours.time[i].slice(0,10);
+    if (!byDay[d]) continue;
+    const h = hours.relative_humidity_2m[i];
+    const p = hours.precipitation[i];
+    byDay[d].hr_avg += h;
+    if (h >= 85) byDay[d].hours_hr_85++;
+    if (h >= 90) byDay[d].hours_hr_90++;
+    if (h >= 95) byDay[d].hours_hr_95++;
+    if (h >= 95 || p > 0.1) byDay[d].hours_wet++;
+  }
+  for (let i=0; i<days.length; i++) {
+    const d = days[i];
+    byDay[d].t_max = forecast.daily.temperature_2m_max[i];
+    byDay[d].t_min = forecast.daily.temperature_2m_min[i];
+    byDay[d].hr_max = forecast.daily.relative_humidity_2m_max[i];
+    byDay[d].hr_min = forecast.daily.relative_humidity_2m_min[i];
+    byDay[d].rain = forecast.daily.precipitation_sum[i];
+    byDay[d].rain_hours = forecast.daily.precipitation_hours[i];
+    byDay[d].hr_avg = byDay[d].hr_avg / 24;
+  }
+  return Object.values(byDay);
+}
+
+function scoreMaladie(clim, dailyStats) {
+  if (clim.t_opt_min == null && clim.t_min == null) return null;
+  return dailyStats.map(d => {
+    let score = 0, reasons = [];
+    const tref = d.t_max;
+    if (clim.t_opt_min != null && clim.t_opt_max != null) {
+      if (tref >= clim.t_opt_min && tref <= clim.t_opt_max) { score += 40; reasons.push(`T° ${Math.round(tref)}°C optimale`); }
+      else if (clim.t_min != null && clim.t_max != null && tref >= clim.t_min && tref <= clim.t_max) { score += 20; reasons.push(`T° ${Math.round(tref)}°C favorable`); }
+      else if (clim.t_min != null && tref < clim.t_min) return { date:d.date, score:0, risk:'low', reasons:['Trop froid'] };
+      else if (clim.t_max != null && tref > clim.t_max) return { date:d.date, score:0, risk:'low', reasons:['Trop chaud'] };
+    } else if (clim.t_min != null && clim.t_max != null) {
+      if (tref >= clim.t_min && tref <= clim.t_max) { score += 30; reasons.push('T° favorable'); }
+      else return { date:d.date, score:0, risk:'low', reasons:[] };
+    }
+    if (clim.hr_seuil != null) {
+      const dur = clim.hr_duree || 6;
+      let h; if (clim.hr_seuil >= 95) h = d.hours_hr_95; else if (clim.hr_seuil >= 90) h = d.hours_hr_90; else h = d.hours_hr_85;
+      if (h >= dur) { score += 30; reasons.push(`HR ≥${clim.hr_seuil}% ${h}h`); }
+      else if (h >= dur/2) { score += 15; reasons.push(`HR ≥${clim.hr_seuil}% ${h}h`); }
+      else if (d.hr_max >= clim.hr_seuil) score += 5;
+    } else { if (d.hr_avg >= 80) score += 15; }
+    if (clim.eau_libre) {
+      if (d.hours_wet >= 4) { score += 20; reasons.push(`Humectation ${d.hours_wet}h`); }
+      else if (d.hours_wet >= 2) score += 10;
+    }
+    if (d.rain > 5) { score += 10; reasons.push(`${Math.round(d.rain)}mm pluie`); }
+    else if (d.rain > 1) score += 5;
+    if (clim.nom.toLowerCase().includes('oïdium')) {
+      if (d.hours_wet > 6) score -= 20;
+      if (d.hr_max > 85 && d.hr_min < 60) { score += 15; reasons.push('Alternance sec/humide'); }
+    }
+    let risk = 'low';
+    if (score >= 70) risk = 'hi';
+    else if (score >= 45) risk = 'mid';
+    return { date:d.date, score:Math.max(0,Math.min(100,score)), risk, reasons };
+  });
+}
+
+function renderMeteo(loc, forecast) {
+  const wrap = document.getElementById('meteo-loaded');
+  const stats = computeDailyStats(forecast);
+
+  // Filtrer les alertes selon les cultures sélectionnées
+  const hasCultureFilter = mesCultures.size > 0;
+  const alerts = [];
+  DATA.climat.forEach(clim => {
+    // Si des cultures sont cochées, ne montrer que les maladies qui les concernent
+    if (hasCultureFilter) {
+      const touched = clim.cultures.some(cu => mesCultures.has(cu));
+      if (!touched) return;
+    }
+    const scores = scoreMaladie(clim, stats);
+    if (!scores) return;
+    const peak = scores.reduce((max,s) => s.score > max.score ? s : max, {score:0,risk:'low'});
+    if (peak.score >= 30) alerts.push({ clim, peak, scores });
+  });
+  const riskOrder = { hi:3, mid:2, low:1 };
+  alerts.sort((a,b) => (riskOrder[b.peak.risk]-riskOrder[a.peak.risk]) || (b.peak.score-a.peak.score));
+
+  const nbHi = alerts.filter(a => a.peak.risk === 'hi').length;
+  const nbMid = alerts.filter(a => a.peak.risk === 'mid').length;
+  const badge = document.getElementById('tab-badge');
+  if (nbHi+nbMid > 0) { badge.textContent = nbHi+nbMid; badge.style.display = ''; badge.style.background = nbHi > 0 ? 'var(--risk-hi)' : 'var(--risk-mid)'; }
+  else { badge.style.display = 'none'; }
+
+  const dayNames = ['dim','lun','mar','mer','jeu','ven','sam'];
+  const monthNames = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+
+  let html = `
+    <div class="location-bar">
+      <div class="loc-ico">📍</div>
+      <div class="loc"><div class="loc-name">${loc.name}</div><div class="loc-meta">Mis à jour à ${new Date().toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}</div></div>
+      <button class="btn btn-ghost" onclick="resetLoc()">Changer</button>
+    </div>
+    <div class="forecast-strip">`;
+  stats.forEach((d,i) => {
+    const dt = new Date(d.date);
+    const today = i === 0;
+    html += `<div class="day${today?' today':''}">
+      <div class="day-name">${today ? 'auj.' : dayNames[dt.getDay()]}</div>
+      <div class="day-temp">${Math.round(d.t_max)}°<small>/${Math.round(d.t_min)}°</small></div>
+      <div class="day-hr">${Math.round(d.hr_avg)}%</div>
+      ${d.rain > 0.5 ? `<div class="day-rain">${d.rain.toFixed(1)}mm</div>` : ''}
+    </div>`;
+  });
+  html += `</div>`;
+
+  // Section "Mes cultures"
+  html += renderCulturesSection();
+
+  // Summary
+  let topClass = 'low', topMsg = hasCultureFilter
+    ? `Aucune alerte pour vos ${mesCultures.size} culture${mesCultures.size>1?'s':''}.`
+    : 'Aucune alerte significative sur 7 jours.';
+  let nbTotal = nbHi + nbMid;
+  if (nbHi > 0) { topClass = 'hi'; topMsg = `${nbHi} risque${nbHi>1?'s':''} élevé${nbHi>1?'s':''}. Action préventive recommandée.`; }
+  else if (nbMid > 0) { topClass = 'mid'; topMsg = `${nbMid} risque${nbMid>1?'s':''} modéré${nbMid>1?'s':''}. Surveillance accrue.`; }
+
+  html += `<div class="alert-summary">
+    <div class="alert-counter ${topClass}">${nbTotal || '✓'}</div>
+    <div class="alert-summary-text">
+      <div class="ttl">${nbTotal ? 'Alertes maladies' : 'Conditions saines'}</div>
+      <div class="sub">${topMsg}</div>
+    </div>
+  </div>`;
+
+  if (!alerts.length) {
+    html += `<div class="empty">${hasCultureFilter ? 'Aucune alerte pour vos cultures. Bon signe !' : 'Aucun seuil de risque déclenché. À recontrôler demain.'}</div>`;
+  } else {
+    html += `<h2 class="section-title">Maladies à surveiller</h2>`;
+    alerts.forEach(a => {
+      const peakDate = new Date(a.peak.date);
+      const today = a.scores[0].date === a.peak.date;
+      const dayIdx = a.scores.findIndex(s => s.date === a.peak.date);
+      const dayLabel = today ? "aujourd'hui" : dayIdx === 1 ? "demain" : `${dayNames[peakDate.getDay()]}. ${peakDate.getDate()} ${monthNames[peakDate.getMonth()]}`;
+      html += `<div class="alert-card ${a.peak.risk}">
+        <div class="alert-card-head">
+          <div class="alert-card-title">${a.clim.nom}<small>${a.clim.pathogene}</small></div>
+          <span class="risk-badge ${a.peak.risk}">${a.peak.risk === 'hi' ? 'ÉLEVÉ' : a.peak.risk === 'mid' ? 'MODÉRÉ' : 'FAIBLE'}</span>
+        </div>
+        <div class="alert-card-cultures">Cultures : <strong>${a.clim.cultures.join(', ')}</strong></div>
+        <div class="alert-card-when">
+          <span class="key">Pic ${dayLabel}</span>
+          <span>${a.peak.reasons.join(' · ') || '—'}</span>
+        </div>
+        <div class="alert-card-action">${(() => {
+          const act = ACTIONS_TERRAIN[a.clim.nom];
+          if (!act) return '<strong>Action :</strong> ' + a.clim.alerte;
+          const typeLbl = act.type === 'preventif' ? '🛡️ PRÉVENTIF' : act.type === 'curatif' ? '💊 CURATIF' : '👁️ SURVEILLANCE';
+          const typeClass = act.type === 'preventif' ? 'color:var(--green-d)' : act.type === 'curatif' ? 'color:var(--rust)' : 'color:var(--gold)';
+          return '<div style="margin-bottom:8px"><span style="font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;' + typeClass + '">' + typeLbl + '</span></div>' +
+            '<div style="margin-bottom:6px"><strong style="color:var(--green-d)">Quoi faire :</strong> ' + act.quoi + '</div>' +
+            '<div><strong style="color:var(--rust)">Quand agir :</strong> ' + act.quand + '</div>';
+        })()}</div>
+      </div>`;
+    });
+  }
+
+  wrap.innerHTML = html;
+}
+
+// Init
+updateFert(); renderChips(); renderList(); initMeteo();
+if (loadStoredLoc()) {
+  setTimeout(() => {
+    const stored = loadStoredLoc();
+    if (stored) {
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stored.lat}&longitude=${stored.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&forecast_days=7&timezone=auto`)
+        .then(r => r.ok ? r.json() : null)
+        .then(j => {
+          if (!j) return;
+          currentForecast = j;
+          const stats = computeDailyStats(j);
+          let nbHi=0, nbMid=0;
+          const hasCF = mesCultures.size > 0;
+          DATA.climat.forEach(clim => {
+            if (hasCF && !clim.cultures.some(cu => mesCultures.has(cu))) return;
+            const scores = scoreMaladie(clim, stats); if (!scores) return;
+            const peak = scores.reduce((m,s) => s.score>m.score?s:m, {score:0,risk:'low'});
+            if (peak.risk === 'hi') nbHi++; else if (peak.risk === 'mid') nbMid++;
+          });
+          const badge = document.getElementById('tab-badge');
+          if (nbHi+nbMid > 0) { badge.textContent = nbHi+nbMid; badge.style.display = ''; badge.style.background = nbHi > 0 ? 'var(--risk-hi)' : 'var(--risk-mid)'; }
+        }).catch(()=>{});
+    }
+  }, 500);
+}
+</script>
+</body>
+</html>
