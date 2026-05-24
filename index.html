@@ -7,6 +7,13 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Maraîchage">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="description" content="Anticipez les maladies de vos cultures maraîchères selon les prévisions météo locales sur 7 jours.">
+<meta property="og:title" content="Outil d'aide au maraîchage">
+<meta property="og:description" content="Anticipez les maladies de vos cultures selon la météo locale.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://elod-oss.github.io/meteo-rique-maraichage/">
+<meta property="og:image" content="https://elod-oss.github.io/meteo-rique-maraichage/icon.svg">
 <title>Outil d'aide · au maraîchage</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +21,8 @@
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%232d3b1f'/%3E%3Ctext x='50' y='68' text-anchor='middle' font-size='55'%3E🌱%3C/text%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.svg">
 
 <style>
 :root{
@@ -335,9 +344,76 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   .input-grid{grid-template-columns:1fr}
   .forecast-strip{grid-template-columns:repeat(7,minmax(38px,1fr))}
 }
+
+/* Skip link */
+.skip-link{
+  position:absolute;top:-100%;left:0;
+  background:var(--green-d);color:var(--paper);
+  padding:12px 18px;z-index:200;font-size:14px;font-weight:600;
+  border-radius:0 0 8px 0;text-decoration:none;
+}
+.skip-link:focus{top:0}
+
+/* Install banner */
+#install-banner{
+  position:fixed;bottom:0;left:0;right:0;
+  padding:14px 18px;
+  padding-bottom:calc(14px + env(safe-area-inset-bottom));
+  background:var(--green-d);color:var(--paper);
+  display:flex;align-items:center;gap:10px;
+  z-index:100;box-shadow:0 -2px 20px rgba(0,0,0,.25);
+}
+#install-banner p{flex:1;font-size:14px;margin:0}
+#install-banner .btn-install{
+  background:var(--gold);color:#fff;border:none;
+  padding:10px 16px;border-radius:8px;
+  font-family:inherit;font-size:13px;font-weight:600;
+  cursor:pointer;min-height:44px;white-space:nowrap;
+}
+#install-banner .btn-dismiss{
+  background:none;color:rgba(244,239,228,.7);border:none;
+  padding:8px;font-size:22px;cursor:pointer;
+  min-height:44px;line-height:1;flex-shrink:0;
+}
+
+/* Update toast */
+#update-toast{
+  position:fixed;top:0;left:0;right:0;
+  padding:12px 18px;
+  background:var(--gold);color:#fff;
+  display:flex;align-items:center;gap:10px;
+  z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.2);
+}
+#update-toast p{flex:1;font-size:13px;margin:0;font-weight:500}
+#update-toast .btn-reload{
+  background:rgba(255,255,255,.25);color:#fff;
+  border:1px solid rgba(255,255,255,.4);
+  padding:8px 14px;border-radius:6px;
+  font-family:inherit;font-size:12px;font-weight:600;
+  cursor:pointer;min-height:40px;white-space:nowrap;
+}
 </style>
 </head>
 <body>
+
+<a class="skip-link" href="#main-content">Aller au contenu principal</a>
+
+<noscript>
+  <div style="background:#9c4a2a;color:#fff;text-align:center;padding:14px 18px;font-size:14px;line-height:1.4">
+    JavaScript est requis pour utiliser cet outil.
+  </div>
+</noscript>
+
+<div id="install-banner" aria-label="Installer l'application" hidden>
+  <p>Installez l'appli pour un accès hors ligne.</p>
+  <button class="btn-install" id="btn-install">Installer</button>
+  <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer">✕</button>
+</div>
+
+<div id="update-toast" role="status" aria-live="polite" hidden>
+  <p>Nouvelle version disponible.</p>
+  <button class="btn-reload" id="btn-update-reload">Actualiser</button>
+</div>
 
 <header class="app-header">
   <div class="app-header-top">
@@ -347,16 +423,16 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
     </div>
     <span class="app-tag">v3</span>
   </div>
-  <nav class="tabs" id="tabs">
-    <button class="tab active" data-view="meteo"><span class="ico">🌍</span> Ma parcelle <span class="badge" id="tab-badge" style="display:none">0</span></button>
-    <button class="tab" data-view="calc-fert"><span class="ico">🧪</span> Ferti</button>
-    <button class="tab" data-view="especes"><span class="ico">🥬</span> Fiches/lég</button>
+  <nav class="tabs" id="tabs" role="tablist" aria-label="Navigation principale">
+    <button class="tab active" role="tab" aria-selected="true" aria-controls="view-meteo" id="tab-meteo" data-view="meteo"><span class="ico" aria-hidden="true">🌍</span> Ma parcelle <span class="badge" id="tab-badge" aria-live="polite" style="display:none">0</span></button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="view-calc-fert" id="tab-calc-fert" data-view="calc-fert"><span class="ico" aria-hidden="true">🧪</span> Ferti</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="view-especes" id="tab-especes" data-view="especes"><span class="ico" aria-hidden="true">🥬</span> Fiches/lég</button>
   </nav>
 </header>
 
-<main>
+<main id="main-content">
   <!-- MA PARCELLE (météo + alertes) -->
-  <section class="view active" id="view-meteo">
+  <section class="view active" id="view-meteo" role="tabpanel" aria-labelledby="tab-meteo" tabindex="0">
     <div id="meteo-content">
       <div id="setup-block" class="meteo-setup">
         <h3>Configurer ma parcelle</h3>
@@ -364,7 +440,7 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
         <div class="btn-group">
           <button class="btn btn-primary" onclick="useGeolocation()">📍 Utiliser ma position GPS</button>
           <div class="commune-input">
-            <input type="text" id="commune-q" placeholder="Ou saisir une commune…">
+            <input type="text" id="commune-q" placeholder="Ou saisir une commune…" aria-label="Commune ou code postal">
             <button onclick="searchCommune()">Chercher</button>
           </div>
           <div id="commune-results"></div>
@@ -376,31 +452,31 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   </section>
 
   <!-- FERTI -->
-  <section class="view" id="view-calc-fert">
+  <section class="view" id="view-calc-fert" role="tabpanel" aria-labelledby="tab-calc-fert" tabindex="0">
     <p class="calc-intro">Dosage <em>fertilisation</em> par planche</p>
     <p class="calc-sub">Calcul des apports N·P·K et compost selon les besoins hectare ramenés à votre planche.</p>
     <div class="calc-card">
       <h4>Dimensions</h4>
       <div class="input-grid">
-        <div class="field"><label>Longueur (m)</label><input type="number" id="ft-long" value="30" min="0.1" step="0.5" inputmode="decimal"></div>
-        <div class="field"><label>Largeur (m)</label><input type="number" id="ft-larg" value="1" min="0.1" step="0.1" inputmode="decimal"></div>
+        <div class="field"><label for="ft-long">Longueur (m)</label><input type="number" id="ft-long" value="30" min="0.1" step="0.5" inputmode="decimal"></div>
+        <div class="field"><label for="ft-larg">Largeur (m)</label><input type="number" id="ft-larg" value="1" min="0.1" step="0.1" inputmode="decimal"></div>
       </div>
       <div class="surface-display"><div class="lbl">Surface</div><div class="val"><span id="ft-surf">30</span><span class="unit">m²</span></div></div>
     </div>
     <div class="calc-card">
       <h4>Espèce cultivée</h4>
-      <div class="field" style="margin-bottom:8px"><label>Espèce</label><select id="ft-esp"></select></div>
+      <div class="field" style="margin-bottom:8px"><label for="ft-esp">Espèce</label><select id="ft-esp"></select></div>
       <div class="result-block" id="ft-result"></div>
     </div>
     <p class="note">1 U/ha = 1 kg/ha = 0,1 g/m². Compost en t/ha → kg/planche. À moduler selon analyse de sol et précédent cultural.</p>
   </section>
 
   <!-- FICHES/LÉG -->
-  <section class="view" id="view-especes">
+  <section class="view" id="view-especes" role="tabpanel" aria-labelledby="tab-especes" tabindex="0">
     <div id="especes-list-wrap">
       <div class="search-wrap">
         <svg class="search-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" class="search" id="search-esp" placeholder="Rechercher une espèce ou maladie…">
+        <input type="search" class="search" id="search-esp" placeholder="Rechercher une espèce ou maladie…" aria-label="Rechercher une espèce ou maladie">
       </div>
       <div class="chips" id="family-chips"></div>
       <div class="list" id="esp-list"></div>
@@ -486,7 +562,11 @@ function clearCultures() {
 
 // ============ TABS ============
 function go(view) {
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.view === view));
+  document.querySelectorAll('.tab').forEach(t => {
+    const active = t.dataset.view === view;
+    t.classList.toggle('active', active);
+    t.setAttribute('aria-selected', String(active));
+  });
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+view));
   if (view === 'especes') showList();
   if (view === 'meteo') initMeteo();
@@ -922,6 +1002,56 @@ function renderMeteo(loc, forecast) {
 
 // Init
 updateFert(); renderChips(); renderList(); initMeteo();
+
+// ============ INSTALL PROMPT ============
+let deferredInstall = null;
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  document.getElementById('install-banner').hidden = false;
+});
+
+document.getElementById('btn-install').addEventListener('click', () => {
+  document.getElementById('install-banner').hidden = true;
+  if (!deferredInstall) return;
+  deferredInstall.prompt();
+  deferredInstall.userChoice.then(() => { deferredInstall = null; });
+});
+
+document.getElementById('btn-install-dismiss').addEventListener('click', () => {
+  document.getElementById('install-banner').hidden = true;
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner').hidden = true;
+  deferredInstall = null;
+});
+
+// ============ SERVICE WORKER ============
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/meteo-rique-maraichage/sw.js', { scope: '/meteo-rique-maraichage/' })
+      .then(reg => {
+        reg.addEventListener('updatefound', () => {
+          const sw = reg.installing;
+          sw.addEventListener('statechange', () => {
+            if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+              document.getElementById('update-toast').hidden = false;
+            }
+          });
+        });
+      })
+      .catch(() => {});
+  });
+
+  document.getElementById('btn-update-reload').addEventListener('click', () => {
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg?.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+    });
+    window.location.reload();
+  });
+}
 if (loadStoredLoc()) {
   setTimeout(() => {
     const stored = loadStoredLoc();
