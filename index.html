@@ -338,6 +338,40 @@ main{position:relative;z-index:2;padding:0 0 30px}
 
 footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,31,18,.4)}
 
+/* Historique */
+.history-strip{
+  display:grid;grid-template-columns:repeat(6,1fr);gap:4px;
+  background:var(--paper);border:1px solid var(--line);border-radius:12px;
+  padding:8px;margin-bottom:6px;
+}
+.hist-day{
+  text-align:center;padding:8px 2px;border-radius:8px;
+  background:var(--paper-2);display:flex;flex-direction:column;
+  gap:3px;align-items:center;cursor:pointer;transition:background .12s;
+}
+.hist-day:active,.hist-day.selected{background:var(--paper-3)}
+.hist-day-name{font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;font-weight:600;opacity:.65}
+.hist-day-date{font-family:'Fraunces',serif;font-size:13px;font-weight:600;line-height:1}
+.hist-risk{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.hist-risk.low{background:var(--risk-low)}
+.hist-risk.mid{background:var(--risk-mid)}
+.hist-risk.hi{background:var(--risk-hi)}
+.hist-risk.none{background:var(--line-strong);opacity:.4}
+.hist-count{font-size:9px;opacity:.55;line-height:1}
+.hist-detail{
+  background:var(--paper);border:1px solid var(--line);border-radius:10px;
+  padding:12px 14px;margin-bottom:14px;animation:fade .2s ease;
+}
+.hist-detail-date{
+  font-family:'Fraunces',serif;font-size:13px;font-weight:600;
+  color:var(--green-d);margin-bottom:8px;letter-spacing:-.01em;
+}
+.hist-alert-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;border-bottom:1px dashed var(--line);font-size:13px;
+}
+.hist-alert-row:last-child{border-bottom:none}
+
 @media (max-width:360px){
   .app-title{font-size:18px}
   .fiche-name{font-size:24px}
@@ -813,7 +847,7 @@ async function showMeteoForLoc(loc) {
   wrap.style.display = '';
   wrap.innerHTML = `<div class="loader">Chargement des prévisions pour ${loc.name}</div>`;
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&forecast_days=7&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&past_days=6&forecast_days=7&timezone=auto`;
     const r = await fetch(url);
     if (!r.ok) throw new Error('Météo indisponible (HTTP '+r.status+')');
     const j = await r.json();
@@ -903,9 +937,98 @@ function scoreMaladie(clim, dailyStats) {
   });
 }
 
+// ============ HISTORIQUE ============
+const HISTORY_KEY = 'planche-historique';
+
+function saveHistory(days) {
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(days)); } catch(e) {}
+}
+function loadHistory() {
+  try { const s = localStorage.getItem(HISTORY_KEY); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+}
+
+function computeHistoryDays(pastStats) {
+  const dayNames = ['dim','lun','mar','mer','jeu','ven','sam'];
+  const byDate = {};
+  pastStats.forEach(d => { byDate[d.date] = { date:d.date, alerts:[] }; });
+  DATA.climat.forEach(clim => {
+    const scores = scoreMaladie(clim, pastStats);
+    if (!scores) return;
+    scores.forEach(s => {
+      if (s.score >= 30 && byDate[s.date]) byDate[s.date].alerts.push({ nom:clim.nom, risk:s.risk, score:s.score });
+    });
+  });
+  return pastStats.map(d => {
+    const day = byDate[d.date];
+    day.alerts.sort((a,b) => b.score - a.score);
+    const nbHi = day.alerts.filter(a => a.risk==='hi').length;
+    const nbMid = day.alerts.filter(a => a.risk==='mid').length;
+    const dt = new Date(d.date);
+    return { ...day, nbHi, nbMid, nbAlerts:day.alerts.length,
+      maxRisk: nbHi>0?'hi':nbMid>0?'mid':day.alerts.length>0?'low':'none',
+      dayName: dayNames[dt.getDay()], dayNum: dt.getDate(), month: dt.getMonth() };
+  });
+}
+
+let _histDays = null;
+let _selectedHistIdx = null;
+
+function renderHistoryStrip(pastStats) {
+  if (!pastStats.length) return '';
+  _histDays = computeHistoryDays(pastStats);
+  saveHistory(_histDays);
+  _selectedHistIdx = null;
+  const dayMonths = ['janv','févr','mars','avr','mai','juin','juil','août','sept','oct','nov','déc'];
+  let html = `<h2 class="section-title">6 derniers jours</h2><div class="history-strip">`;
+  _histDays.forEach((d,i) => {
+    const lbl = d.nbAlerts === 0 ? '✓' : `${d.nbAlerts}`;
+    html += `<div class="hist-day" id="hd-${i}" onclick="toggleHistDetail(${i})">
+      <div class="hist-day-name">${d.dayName}</div>
+      <div class="hist-day-date">${d.dayNum}</div>
+      <div class="hist-risk ${d.maxRisk}"></div>
+      <div class="hist-count">${lbl}</div>
+    </div>`;
+  });
+  html += `</div><div id="hist-detail-wrap"></div>`;
+  return html;
+}
+
+function toggleHistDetail(i) {
+  const wrap = document.getElementById('hist-detail-wrap');
+  if (!wrap || !_histDays) return;
+  // Désélectionner si déjà sélectionné
+  if (_selectedHistIdx === i) {
+    _selectedHistIdx = null;
+    wrap.innerHTML = '';
+    document.querySelectorAll('.hist-day').forEach(el => el.classList.remove('selected'));
+    return;
+  }
+  _selectedHistIdx = i;
+  document.querySelectorAll('.hist-day').forEach((el,j) => el.classList.toggle('selected', j===i));
+  const d = _histDays[i];
+  const daysFull = ['Dimanche','Lundi','Mardi','Mercredi','Jeudi','Vendredi','Samedi'];
+  const monthsFull = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+  const dt = new Date(d.date);
+  let html = `<div class="hist-detail"><div class="hist-detail-date">${daysFull[dt.getDay()]} ${d.dayNum} ${monthsFull[d.month]}</div>`;
+  if (!d.alerts.length) {
+    html += `<div style="color:var(--risk-low);font-weight:500;font-size:13px">✓ Aucune alerte ce jour-là</div>`;
+  } else {
+    d.alerts.forEach(a => {
+      const lbl = a.risk==='hi'?'ÉLEVÉ':a.risk==='mid'?'MODÉRÉ':'FAIBLE';
+      const col = a.risk==='hi'?'var(--risk-hi)':a.risk==='mid'?'var(--risk-mid)':'var(--risk-low)';
+      html += `<div class="hist-alert-row"><span style="font-weight:500;color:var(--green-d)">${a.nom}</span><span style="font-size:10.5px;font-weight:700;letter-spacing:.08em;color:${col}">${lbl}</span></div>`;
+    });
+  }
+  html += `</div>`;
+  wrap.innerHTML = html;
+}
+
 function renderMeteo(loc, forecast) {
   const wrap = document.getElementById('meteo-loaded');
-  const stats = computeDailyStats(forecast);
+  const allStats = computeDailyStats(forecast);
+  const todayStr = new Date().toISOString().slice(0,10);
+  const pastStats = allStats.filter(d => d.date < todayStr);
+  const stats = allStats.filter(d => d.date >= todayStr).slice(0,7);
 
   // Filtrer les alertes selon les cultures sélectionnées
   const hasCultureFilter = mesCultures.size > 0;
@@ -951,6 +1074,9 @@ function renderMeteo(loc, forecast) {
     </div>`;
   });
   html += `</div>`;
+
+  // Historique 6 jours
+  html += renderHistoryStrip(pastStats);
 
   // Section "Mes cultures"
   html += renderCulturesSection();
@@ -1081,12 +1207,14 @@ if (loadStoredLoc()) {
   setTimeout(() => {
     const stored = loadStoredLoc();
     if (stored) {
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stored.lat}&longitude=${stored.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&forecast_days=7&timezone=auto`)
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stored.lat}&longitude=${stored.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&past_days=6&forecast_days=7&timezone=auto`)
         .then(r => r.ok ? r.json() : null)
         .then(j => {
           if (!j) return;
           currentForecast = j;
-          const stats = computeDailyStats(j);
+          const allSt = computeDailyStats(j);
+          const todaySt = new Date().toISOString().slice(0,10);
+          const stats = allSt.filter(d => d.date >= todaySt).slice(0,7);
           let nbHi=0, nbMid=0;
           const hasCF = mesCultures.size > 0;
           DATA.climat.forEach(clim => {
