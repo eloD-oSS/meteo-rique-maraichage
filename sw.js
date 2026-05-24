@@ -1,5 +1,5 @@
-const CACHE = 'maraichage-v1';
-const FONT_CACHE = 'maraichage-fonts-v1';
+const CACHE = 'maraichage-v2';
+const FONT_CACHE = 'maraichage-fonts-v2';
 const APP_SHELL = [
   '/meteo-rique-maraichage/',
   '/meteo-rique-maraichage/index.html',
@@ -16,8 +16,8 @@ const API_HOSTS = new Set([
 self.addEventListener('install', e => {
   e.waitUntil(
     caches.open(CACHE).then(c => c.addAll(APP_SHELL))
-    // Pas de skipWaiting ici : on laisse l'update toast gérer la transition
   );
+  self.skipWaiting();
 });
 
 self.addEventListener('activate', e => {

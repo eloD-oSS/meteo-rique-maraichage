@@ -405,7 +405,7 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   </div>
 </noscript>
 
-<div id="update-toast" role="status" aria-live="polite" hidden>
+<div id="update-toast" role="status" aria-live="polite" style="display:none">
   <p>Nouvelle version disponible.</p>
   <button class="btn-reload" id="btn-update-reload">Actualiser</button>
 </div>
@@ -1037,7 +1037,7 @@ if ('serviceWorker' in navigator) {
           const sw = reg.installing;
           sw.addEventListener('statechange', () => {
             if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-              document.getElementById('update-toast').hidden = false;
+              document.getElementById('update-toast').style.display = 'flex';
             }
           });
         });
