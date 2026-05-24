@@ -356,28 +356,23 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
 
 /* Install banner */
 #install-banner{
-  position:fixed;bottom:0;left:0;right:0;
-  padding:14px 18px;
-  padding-bottom:calc(14px + env(safe-area-inset-bottom));
   background:var(--green-d);color:var(--paper);
+  padding:14px 16px;border-radius:12px;
   display:flex;align-items:center;gap:10px;
-  z-index:9999;box-shadow:0 -2px 20px rgba(0,0,0,.25);
-  pointer-events:auto;
+  margin-bottom:14px;
 }
-#install-banner p{flex:1;font-size:14px;margin:0}
+#install-banner p{flex:1;font-size:14px;margin:0;line-height:1.35}
 #install-banner .btn-install{
   background:var(--gold);color:#fff;border:none;
-  padding:10px 16px;border-radius:8px;
+  padding:10px 14px;border-radius:8px;
   font-family:inherit;font-size:13px;font-weight:600;
-  cursor:pointer;min-height:48px;white-space:nowrap;
-  touch-action:manipulation;pointer-events:auto;
+  cursor:pointer;min-height:44px;white-space:nowrap;
 }
 #install-banner .btn-dismiss{
-  background:none;color:rgba(244,239,228,.7);border:none;
-  padding:12px;font-size:22px;cursor:pointer;
-  min-height:48px;min-width:48px;line-height:1;
-  flex-shrink:0;touch-action:manipulation;pointer-events:auto;
-  display:flex;align-items:center;justify-content:center;
+  background:none;color:rgba(244,239,228,.6);border:none;
+  padding:8px;font-size:20px;cursor:pointer;
+  min-height:44px;min-width:44px;line-height:1;
+  flex-shrink:0;display:flex;align-items:center;justify-content:center;
 }
 
 /* Update toast */
@@ -410,12 +405,6 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   </div>
 </noscript>
 
-<div id="install-banner" aria-label="Installer l'application" hidden>
-  <p>Installez l'appli pour un accès hors ligne.</p>
-  <button class="btn-install" id="btn-install" onclick="installApp()">Installer</button>
-  <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer" onclick="dismissInstall()">✕</button>
-</div>
-
 <div id="update-toast" role="status" aria-live="polite" hidden>
   <p>Nouvelle version disponible.</p>
   <button class="btn-reload" id="btn-update-reload">Actualiser</button>
@@ -439,6 +428,11 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
 <main id="main-content">
   <!-- MA PARCELLE (météo + alertes) -->
   <section class="view active" id="view-meteo" role="tabpanel" aria-labelledby="tab-meteo" tabindex="0">
+    <div id="install-banner" aria-label="Installer l'application" hidden>
+      <p>Installez l'appli pour un accès hors ligne.</p>
+      <button class="btn-install" id="btn-install" onclick="installApp()">Installer</button>
+      <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer" onclick="dismissInstall()">✕</button>
+    </div>
     <div id="meteo-content">
       <div id="setup-block" class="meteo-setup">
         <h3>Configurer ma parcelle</h3>
