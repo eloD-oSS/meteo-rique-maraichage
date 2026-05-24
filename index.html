@@ -428,7 +428,7 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
 <main id="main-content">
   <!-- MA PARCELLE (météo + alertes) -->
   <section class="view active" id="view-meteo" role="tabpanel" aria-labelledby="tab-meteo" tabindex="0">
-    <div id="install-banner" aria-label="Installer l'application" hidden>
+    <div id="install-banner" aria-label="Installer l'application" style="display:none">
       <p>Installez l'appli pour un accès hors ligne.</p>
       <button class="btn-install" id="btn-install" onclick="installApp()">Installer</button>
       <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer" onclick="dismissInstall()">✕</button>
@@ -1007,24 +1007,24 @@ updateFert(); renderChips(); renderList(); initMeteo();
 let deferredInstall = null;
 
 function installApp() {
-  document.getElementById('install-banner').hidden = true;
+  document.getElementById('install-banner').style.display = 'none';
   if (!deferredInstall) return;
   deferredInstall.prompt();
   deferredInstall.userChoice.then(() => { deferredInstall = null; });
 }
 
 function dismissInstall() {
-  document.getElementById('install-banner').hidden = true;
+  document.getElementById('install-banner').style.display = 'none';
 }
 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstall = e;
-  document.getElementById('install-banner').hidden = false;
+  document.getElementById('install-banner').style.display = 'flex';
 });
 
 window.addEventListener('appinstalled', () => {
-  document.getElementById('install-banner').hidden = true;
+  document.getElementById('install-banner').style.display = 'none';
   deferredInstall = null;
 });
 
