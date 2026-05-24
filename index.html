@@ -429,7 +429,13 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   <!-- MA PARCELLE (météo + alertes) -->
   <section class="view active" id="view-meteo" role="tabpanel" aria-labelledby="tab-meteo" tabindex="0">
     <div id="install-banner" aria-label="Installer l'application" style="display:none">
-      <p>Installez l'appli pour un accès hors ligne.</p>
+      <div style="flex:1;min-width:0">
+        <p id="install-text">Installez l'appli pour un accès hors ligne.</p>
+        <p id="install-manual" style="display:none;font-size:12px;opacity:.8;margin-top:4px;line-height:1.4">
+          Menu <strong>⋮</strong> → <strong>Ajouter à l'écran d'accueil</strong><br>
+          (ou utilisez Chrome pour une installation automatique)
+        </p>
+      </div>
       <button class="btn-install" id="btn-install" onclick="installApp()">Installer</button>
       <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer" onclick="dismissInstall()">✕</button>
     </div>
@@ -1005,12 +1011,20 @@ updateFert(); renderChips(); renderList(); initMeteo();
 
 // ============ INSTALL PROMPT ============
 let deferredInstall = null;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone;
+const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
 function installApp() {
-  document.getElementById('install-banner').style.display = 'none';
-  if (!deferredInstall) return;
-  deferredInstall.prompt();
-  deferredInstall.userChoice.then(() => { deferredInstall = null; });
+  if (deferredInstall) {
+    // Chrome Android : prompt natif
+    document.getElementById('install-banner').style.display = 'none';
+    deferredInstall.prompt();
+    deferredInstall.userChoice.then(() => { deferredInstall = null; });
+  } else {
+    // Navigateur sans support (MIUI, Firefox…) : afficher les instructions manuelles
+    document.getElementById('install-manual').style.display = 'block';
+    document.getElementById('btn-install').style.display = 'none';
+  }
 }
 
 function dismissInstall() {
@@ -1021,12 +1035,23 @@ window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
   deferredInstall = e;
   document.getElementById('install-banner').style.display = 'flex';
+  document.getElementById('install-manual').style.display = 'none';
+  document.getElementById('btn-install').style.display = '';
 });
 
 window.addEventListener('appinstalled', () => {
   document.getElementById('install-banner').style.display = 'none';
   deferredInstall = null;
 });
+
+// Fallback : afficher le bandeau sur mobile si beforeinstallprompt ne se déclenche pas
+if (isMobile && !isStandalone) {
+  setTimeout(() => {
+    if (!deferredInstall) {
+      document.getElementById('install-banner').style.display = 'flex';
+    }
+  }, 2000);
+}
 
 // ============ SERVICE WORKER ============
 if ('serviceWorker' in navigator) {
