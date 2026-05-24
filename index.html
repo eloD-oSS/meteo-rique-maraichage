@@ -412,8 +412,8 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
 
 <div id="install-banner" aria-label="Installer l'application" hidden>
   <p>Installez l'appli pour un accès hors ligne.</p>
-  <button class="btn-install" id="btn-install">Installer</button>
-  <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer">✕</button>
+  <button class="btn-install" id="btn-install" onclick="installApp()">Installer</button>
+  <button class="btn-dismiss" id="btn-install-dismiss" aria-label="Fermer" onclick="dismissInstall()">✕</button>
 </div>
 
 <div id="update-toast" role="status" aria-live="polite" hidden>
@@ -1012,21 +1012,21 @@ updateFert(); renderChips(); renderList(); initMeteo();
 // ============ INSTALL PROMPT ============
 let deferredInstall = null;
 
-window.addEventListener('beforeinstallprompt', e => {
-  e.preventDefault();
-  deferredInstall = e;
-  document.getElementById('install-banner').hidden = false;
-});
-
-document.getElementById('btn-install').addEventListener('click', () => {
+function installApp() {
   document.getElementById('install-banner').hidden = true;
   if (!deferredInstall) return;
   deferredInstall.prompt();
   deferredInstall.userChoice.then(() => { deferredInstall = null; });
-});
+}
 
-document.getElementById('btn-install-dismiss').addEventListener('click', () => {
+function dismissInstall() {
   document.getElementById('install-banner').hidden = true;
+}
+
+window.addEventListener('beforeinstallprompt', e => {
+  e.preventDefault();
+  deferredInstall = e;
+  document.getElementById('install-banner').hidden = false;
 });
 
 window.addEventListener('appinstalled', () => {
