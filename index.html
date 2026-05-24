@@ -361,19 +361,23 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   padding-bottom:calc(14px + env(safe-area-inset-bottom));
   background:var(--green-d);color:var(--paper);
   display:flex;align-items:center;gap:10px;
-  z-index:100;box-shadow:0 -2px 20px rgba(0,0,0,.25);
+  z-index:9999;box-shadow:0 -2px 20px rgba(0,0,0,.25);
+  pointer-events:auto;
 }
 #install-banner p{flex:1;font-size:14px;margin:0}
 #install-banner .btn-install{
   background:var(--gold);color:#fff;border:none;
   padding:10px 16px;border-radius:8px;
   font-family:inherit;font-size:13px;font-weight:600;
-  cursor:pointer;min-height:44px;white-space:nowrap;
+  cursor:pointer;min-height:48px;white-space:nowrap;
+  touch-action:manipulation;pointer-events:auto;
 }
 #install-banner .btn-dismiss{
   background:none;color:rgba(244,239,228,.7);border:none;
-  padding:8px;font-size:22px;cursor:pointer;
-  min-height:44px;line-height:1;flex-shrink:0;
+  padding:12px;font-size:22px;cursor:pointer;
+  min-height:48px;min-width:48px;line-height:1;
+  flex-shrink:0;touch-action:manipulation;pointer-events:auto;
+  display:flex;align-items:center;justify-content:center;
 }
 
 /* Update toast */
@@ -382,7 +386,8 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   padding:12px 18px;
   background:var(--gold);color:#fff;
   display:flex;align-items:center;gap:10px;
-  z-index:100;box-shadow:0 2px 16px rgba(0,0,0,.2);
+  z-index:9999;box-shadow:0 2px 16px rgba(0,0,0,.2);
+  pointer-events:auto;
 }
 #update-toast p{flex:1;font-size:13px;margin:0;font-weight:500}
 #update-toast .btn-reload{
@@ -390,7 +395,8 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   border:1px solid rgba(255,255,255,.4);
   padding:8px 14px;border-radius:6px;
   font-family:inherit;font-size:12px;font-weight:600;
-  cursor:pointer;min-height:40px;white-space:nowrap;
+  cursor:pointer;min-height:44px;white-space:nowrap;
+  touch-action:manipulation;pointer-events:auto;
 }
 </style>
 </head>
