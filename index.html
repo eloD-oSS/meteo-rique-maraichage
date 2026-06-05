@@ -999,7 +999,7 @@ function computePressure(clim, pastStats) {
 }
 function scoreMaladie(clim, dailyStats, pressureBonus = 0) {
   if (clim.t_opt_min == null && clim.t_min == null) return null;
-  return dailyStats.map(d => {
+  return dailyStats.map((d, i) => {
     let score = 0, reasons = [];
     const tref = d.t_max;
     if (clim.t_opt_min != null && clim.t_opt_max != null) {
