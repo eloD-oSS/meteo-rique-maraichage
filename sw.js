@@ -1,5 +1,5 @@
-const CACHE = 'maraichage-v4';
-const FONT_CACHE = 'maraichage-fonts-v4';
+const CACHE = 'maraichage-v5';
+const FONT_CACHE = 'maraichage-fonts-v5';
 const APP_SHELL = [
   '/meteo-rique-maraichage/',
   '/meteo-rique-maraichage/index.html',
