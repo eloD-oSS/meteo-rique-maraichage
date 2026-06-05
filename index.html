@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="wi    device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#2d3b1f">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -476,7 +476,8 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
     <span class="app-tag">v3</span>
   </div>
   <nav class="tabs" id="tabs" role="tablist" aria-label="Navigation principale">
-    <button class="tab active" role="tab" aria-selected="true" aria-controls="view-meteo" id="tab-meteo" data-view="meteo"><span class="ico" aria-hidden="true">🌍</span> Risques maladies <span class="badge" id="tab-badge" aria-live="polite" style="display:none">0</span></button>
+    <button class="tab active" role="tab" aria-selected="true" aria-controls="view-meteo" id="tab-meteo" data-view="meteo"><span class="ico" aria-hidden="true">🌤️</span> Météo</button>
+    <button class="tab" role="tab" aria-selected="false" aria-controls="view-risques" id="tab-risques" data-view="risques"><span class="ico" aria-hidden="true">🦠</span> Risques <span class="badge" id="tab-badge" aria-live="polite" style="display:none">0</span></button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="view-calc-fert" id="tab-calc-fert" data-view="calc-fert"><span class="ico" aria-hidden="true">🧪</span> Ferti</button>
     <button class="tab" role="tab" aria-selected="false" aria-controls="view-especes" id="tab-especes" data-view="especes"><span class="ico" aria-hidden="true">🥬</span> Fiches/lég</button>
   </nav>
@@ -512,7 +513,18 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
       </div>
       <div id="meteo-loaded" style="display:none"></div>
     </div>
-  </section>
+  
+  <!-- RISQUES MALADIES -->
+  <section class="view" id="view-risques" role="tabpanel" aria-labelledby="tab-risques" tabindex="0">
+    <div id="risques-content">
+      <div id="risques-setup" class="meteo-setup">
+        <h3>Localisation non configurée</h3>
+        <p>Allez sur l'onglet Météo pour configurer votre localisation, puis revenez ici.</p>
+        <button class="btn btn-primary" onclick="go('meteo')">🌤️ Configurer la localisation</button>
+      </div>
+      <div id="risques-loaded" style="display:none"></div>
+    </div>
+  </section></section>
 
   <!-- FERTI -->
   <section class="view" id="view-calc-fert" role="tabpanel" aria-labelledby="tab-calc-fert" tabindex="0">
@@ -680,6 +692,7 @@ function go(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+view));
   if (view === 'especes') showList();
   if (view === 'meteo') initMeteo();
+  if (view === 'risques') { if (currentLoc && currentForecast) renderMeteo(currentLoc, currentForecast); else { document.getElementById('risques-setup').style.display=''; document.getElementById('risques-loaded').style.display='none'; } }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.view)));
@@ -1126,7 +1139,13 @@ function toggleHistDetail(i) {
     });
   }
   html += `</div>`;
-  wrap.innerHTML = html;
+  const risquesWrap = document.getElementById('risques-loaded');
+  if (risquesWrap) {
+    risquesWrap.innerHTML = html;
+    risquesWrap.style.display = '';
+    const rs = document.getElementById('risques-setup');
+    if (rs) rs.style.display = 'none';
+  }
 }
 
 function weatherIcon(code) {
@@ -1198,8 +1217,9 @@ function renderMeteo(loc, forecast) {
 
   // Section "Mes cultures"
   html += renderCulturesSection();
+  wrap.innerHTML = html; html = '';
 
-  // Summary
+  // Risques maladies
   let topClass = 'low', topMsg = hasCultureFilter
     ? `Aucune alerte pour vos ${mesCultures.size} culture${mesCultures.size>1?'s':''}.`
     : 'Aucune alerte significative sur 7 jours.';
@@ -1247,7 +1267,13 @@ function renderMeteo(loc, forecast) {
     });
   }
 
-  wrap.innerHTML = html;
+  const risquesWrap = document.getElementById('risques-loaded');
+  if (risquesWrap) {
+    risquesWrap.innerHTML = html;
+    risquesWrap.style.display = '';
+    const rs = document.getElementById('risques-setup');
+    if (rs) rs.style.display = 'none';
+  }
 }
 
 // Init
