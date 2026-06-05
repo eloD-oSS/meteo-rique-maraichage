@@ -1299,26 +1299,45 @@ if (isMobile && !isStandalone) {
 
 // ============ SERVICE WORKER ============
 if ('serviceWorker' in navigator) {
+  // Rechargement automatique quand un nouveau SW prend le relais
+  let _refreshing = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!_refreshing) { _refreshing = true; window.location.reload(); }
+  });
+
+  const _showUpdateToast = () => {
+    document.getElementById('update-toast').style.display = 'flex';
+  };
+
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/meteo-rique-maraichage/sw.js', { scope: '/meteo-rique-maraichage/' })
       .then(reg => {
+        // Cas 1 : SW deja installe et en attente depuis une session precedente (cas frequent sur mobile)
+        if (reg.waiting && navigator.serviceWorker.controller) {
+          _showUpdateToast();
+        }
+
+        // Cas 2 : nouveau SW en cours d'installation pendant cette session
         reg.addEventListener('updatefound', () => {
           const sw = reg.installing;
           sw.addEventListener('statechange', () => {
             if (sw.state === 'installed' && navigator.serviceWorker.controller) {
-              document.getElementById('update-toast').style.display = 'flex';
+              _showUpdateToast();
             }
           });
         });
+
+        // Verifier une mise a jour toutes les 60s (utile si l'app reste ouverte longtemps)
+        setInterval(() => reg.update(), 60000);
       })
       .catch(() => {});
   });
 
   document.getElementById('btn-update-reload').addEventListener('click', () => {
     navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg?.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      if (reg && reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+      else window.location.reload();
     });
-    window.location.reload();
   });
 }
 if (loadStoredLoc()) {
