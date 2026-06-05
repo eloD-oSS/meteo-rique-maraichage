@@ -286,6 +286,7 @@ main{position:relative;z-index:2;padding:0 0 30px}
 .day{text-align:center;padding:8px 2px;border-radius:8px;background:var(--paper-2);display:flex;flex-direction:column;gap:3px;align-items:center;justify-content:center}
 .day.today{background:var(--green-d);color:var(--paper)}
 .day-name{font-size:10px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.7}
+.day-icon{font-size:18px;line-height:1;margin:2px 0}
 .day.today .day-name{opacity:1}
 .day-temp{font-family:'Fraunces',serif;font-size:14px;font-weight:600;line-height:1}
 .day-temp small{font-size:10px;opacity:.6;font-weight:400;margin-left:1px}
@@ -929,7 +930,7 @@ async function showMeteoForLoc(loc) {
   wrap.style.display = '';
   wrap.innerHTML = `<div class="loader">Chargement des prévisions pour ${loc.name}</div>`;
   try {
-    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&past_days=6&forecast_days=7&timezone=auto`;
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours,weathercode&past_days=6&forecast_days=7&timezone=auto`;
     const r = await fetch(url);
     if (!r.ok) throw new Error('Météo indisponible (HTTP '+r.status+')');
     const j = await r.json();
@@ -956,7 +957,7 @@ function computeDailyStats(forecast) {
   const days = forecast.daily.time;
   const byDay = {};
   days.forEach(d => byDay[d] = { date:d, t_max:null, t_min:null, hr_max:null, hr_min:null, hr_avg:0,
-                                  hours_hr_85:0, hours_hr_90:0, hours_hr_95:0, hours_wet:0, rain:0, rain_hours:0 });
+                                  hours_hr_85:0, hours_hr_90:0, hours_hr_95:0, hours_wet:0, rain:0, rain_hours:0, wcode:null });
   for (let i=0; i<hours.time.length; i++) {
     const d = hours.time[i].slice(0,10);
     if (!byDay[d]) continue;
@@ -976,6 +977,7 @@ function computeDailyStats(forecast) {
     byDay[d].hr_min = forecast.daily.relative_humidity_2m_min[i];
     byDay[d].rain = forecast.daily.precipitation_sum[i];
     byDay[d].rain_hours = forecast.daily.precipitation_hours[i];
+    byDay[d].wcode = forecast.daily.weathercode ? forecast.daily.weathercode[i] : null;
     byDay[d].hr_avg = byDay[d].hr_avg / 24;
   }
   return Object.values(byDay);
@@ -1105,6 +1107,19 @@ function toggleHistDetail(i) {
   wrap.innerHTML = html;
 }
 
+function weatherIcon(code) {
+  if (code === null || code === undefined) return '';
+  if (code === 0)           return '☀️';
+  if (code <= 2)            return '🌤️';
+  if (code === 3)           return '☁️';
+  if (code <= 49)           return '🌫️';
+  if (code <= 55)           return '🌦️';
+  if (code <= 65)           return '🌧️';
+  if (code <= 77)           return '❄️';
+  if (code <= 82)           return '🌦️';
+  if (code <= 86)           return '🌨️';
+  return '⛈️';
+}
 function renderMeteo(loc, forecast) {
   const wrap = document.getElementById('meteo-loaded');
   const allStats = computeDailyStats(forecast);
@@ -1150,6 +1165,7 @@ function renderMeteo(loc, forecast) {
     const today = i === 0;
     html += `<div class="day${today?' today':''}">
       <div class="day-name">${today ? 'auj.' : dayNames[dt.getDay()]}</div>
+      <div class="day-icon">${weatherIcon(d.wcode)}</div>
       <div class="day-temp">${Math.round(d.t_max)}°<small>/${Math.round(d.t_min)}°</small></div>
       <div class="day-hr">${Math.round(d.hr_avg)}%</div>
       ${d.rain > 0.5 ? `<div class="day-rain">${d.rain.toFixed(1)}mm</div>` : ''}
@@ -1289,7 +1305,7 @@ if (loadStoredLoc()) {
   setTimeout(() => {
     const stored = loadStoredLoc();
     if (stored) {
-      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stored.lat}&longitude=${stored.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours&past_days=6&forecast_days=7&timezone=auto`)
+      fetch(`https://api.open-meteo.com/v1/forecast?latitude=${stored.lat}&longitude=${stored.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours,weathercode&past_days=6&forecast_days=7&timezone=auto`)
         .then(r => r.ok ? r.json() : null)
         .then(j => {
           if (!j) return;
