@@ -338,6 +338,11 @@ main{position:relative;z-index:2;padding:0 0 30px}
 
 footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:rgba(26,31,18,.4)}
 
+/* Mode toggle ferti */
+.mode-toggle{display:flex;background:var(--paper-2);border:1px solid var(--line);border-radius:8px;padding:3px;margin-bottom:14px}
+.mode-btn{flex:1;padding:8px 10px;border:none;background:none;border-radius:6px;font-family:inherit;font-size:12px;font-weight:500;color:rgba(26,31,18,.55);cursor:pointer;transition:all .15s;text-align:center;min-height:36px}
+.mode-btn.active{background:#fff;color:var(--green-d);font-weight:600;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+
 /* Historique */
 .history-strip{
   display:grid;grid-template-columns:repeat(6,1fr);gap:4px;
@@ -493,15 +498,27 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
 
   <!-- FERTI -->
   <section class="view" id="view-calc-fert" role="tabpanel" aria-labelledby="tab-calc-fert" tabindex="0">
-    <p class="calc-intro">Dosage <em>fertilisation</em> par planche</p>
-    <p class="calc-sub">Calcul des apports N·P·K et compost selon les besoins hectare ramenés à votre planche.</p>
+    <p class="calc-intro">Dosage <em>fertilisation</em></p>
+    <p class="calc-sub">Calcul des apports N·P·K et compost selon les besoins hectare ramenés à votre surface.</p>
     <div class="calc-card">
-      <h4>Dimensions</h4>
-      <div class="input-grid">
-        <div class="field"><label for="ft-long">Longueur (m)</label><input type="number" id="ft-long" value="30" min="0.1" step="0.5" inputmode="decimal"></div>
-        <div class="field"><label for="ft-larg">Largeur (m)</label><input type="number" id="ft-larg" value="1" min="0.1" step="0.1" inputmode="decimal"></div>
+      <h4>Surface</h4>
+      <div class="mode-toggle">
+        <button class="mode-btn active" id="mode-planche" onclick="setFertMode('planche')">Planche (L × l)</button>
+        <button class="mode-btn" id="mode-surface" onclick="setFertMode('surface')">Surface libre</button>
       </div>
-      <div class="surface-display"><div class="lbl">Surface</div><div class="val"><span id="ft-surf">30</span><span class="unit">m²</span></div></div>
+      <div id="ft-dims">
+        <div class="input-grid">
+          <div class="field"><label for="ft-long">Longueur (m)</label><input type="number" id="ft-long" value="30" min="0.1" step="0.5" inputmode="decimal"></div>
+          <div class="field"><label for="ft-larg">Largeur (m)</label><input type="number" id="ft-larg" value="1" min="0.1" step="0.1" inputmode="decimal"></div>
+        </div>
+        <div class="surface-display"><div class="lbl">Surface calculée</div><div class="val"><span id="ft-surf">30</span><span class="unit">m²</span></div></div>
+      </div>
+      <div id="ft-surf-libre" style="display:none">
+        <div class="field">
+          <label for="ft-surf-input">Surface (m²)</label>
+          <input type="number" id="ft-surf-input" value="30" min="0.1" step="1" inputmode="decimal" style="width:100%;font-size:24px;padding:14px 12px">
+        </div>
+      </div>
     </div>
     <div class="calc-card">
       <h4>Espèce cultivée</h4>
@@ -741,8 +758,19 @@ function updateSurface(longId, largId, surfId) {
   document.getElementById(surfId).textContent = s;
   return s;
 }
+let fertMode = 'planche';
+function setFertMode(mode) {
+  fertMode = mode;
+  document.getElementById('ft-dims').style.display = mode === 'planche' ? '' : 'none';
+  document.getElementById('ft-surf-libre').style.display = mode === 'surface' ? '' : 'none';
+  document.getElementById('mode-planche').classList.toggle('active', mode === 'planche');
+  document.getElementById('mode-surface').classList.toggle('active', mode === 'surface');
+  updateFert();
+}
 function updateFert() {
-  const surf = updateSurface('ft-long','ft-larg','ft-surf');
+  const surf = fertMode === 'surface'
+    ? (parseFloat(document.getElementById('ft-surf-input').value) || 0)
+    : updateSurface('ft-long','ft-larg','ft-surf');
   const espName = document.getElementById('ft-esp').value;
   const e = especes[espName]; if (!e || !e.fert) { document.getElementById('ft-result').innerHTML = ''; return; }
   const f = e.fert;
@@ -769,9 +797,11 @@ function updateFert() {
     ${f.compost ? `<div class="result-row" style="border-bottom:none"><span class="lbl" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase">Amendement</span><span class="val" style="font-size:12px;font-family:'IBM Plex Sans',sans-serif;font-weight:500;text-align:right;max-width:65%">${f.compost}</span></div>`:''}
     ${f.commentaires ? `<div class="result-row" style="border-bottom:none;color:var(--rust)"><span class="lbl" style="font-style:italic">${f.commentaires}</span></div>`:''}`;
 }
-['ft-long','ft-larg','ft-esp'].forEach(id => {
-  document.getElementById(id).addEventListener('input', updateFert);
-  document.getElementById(id).addEventListener('change', updateFert);
+['ft-long','ft-larg','ft-esp','ft-surf-input'].forEach(id => {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('input', updateFert);
+  el.addEventListener('change', updateFert);
 });
 
 // ============ MÉTÉO + ALERTES ============
