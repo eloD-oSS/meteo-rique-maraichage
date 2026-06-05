@@ -983,7 +983,21 @@ function computeDailyStats(forecast) {
   return Object.values(byDay);
 }
 
-function scoreMaladie(clim, dailyStats) {
+// Calcule le bonus de pression inoculaire à partir des jours passés
+function computePressure(clim, pastStats) {
+  if (!pastStats || pastStats.length === 0) return 0;
+  // Compter les jours passés avec un score favorable (≥45 = conditions propices à la maladie)
+  let favorable = 0;
+  for (const d of pastStats) {
+    const s = scoreMaladie(clim, [d]); // pressureBonus=0 par défaut
+    if (s && s[0] && s[0].score >= 45) favorable++;
+  }
+  if (favorable >= 3) return 30;
+  if (favorable >= 2) return 20;
+  if (favorable >= 1) return 10;
+  return 0;
+}
+function scoreMaladie(clim, dailyStats, pressureBonus = 0) {
   if (clim.t_opt_min == null && clim.t_min == null) return null;
   return dailyStats.map(d => {
     let score = 0, reasons = [];
@@ -1014,12 +1028,20 @@ function scoreMaladie(clim, dailyStats) {
       if (d.hours_wet > 6) score -= 20;
       if (d.hr_max > 85 && d.hr_min < 60) { score += 15; reasons.push('Alternance sec/humide'); }
     }
+    // Pression inoculaire des jours passés (décroissante : 100% j0-j1, 50% j2)
+    if (pressureBonus > 0) {
+      const decay = i <= 1 ? 1 : i === 2 ? 0.5 : 0;
+      const bonus = Math.round(pressureBonus * decay);
+      if (bonus > 0) { score += bonus; reasons.push('Pression inoculaire +' + bonus + ' pts'); }
+    }
     let risk = 'low';
     if (score >= 70) risk = 'hi';
     else if (score >= 45) risk = 'mid';
     return { date:d.date, score:Math.max(0,Math.min(100,score)), risk, reasons };
   });
 }
+
+
 
 // ============ HISTORIQUE ============
 const HISTORY_KEY = 'planche-historique';
@@ -1136,7 +1158,8 @@ function renderMeteo(loc, forecast) {
       const touched = clim.cultures.some(cu => mesCultures.has(cu));
       if (!touched) return;
     }
-    const scores = scoreMaladie(clim, stats);
+    const pressureBonus = computePressure(clim, pastStats);
+    const scores = scoreMaladie(clim, stats, pressureBonus);
     if (!scores) return;
     const peak = scores.reduce((max,s) => s.score > max.score ? s : max, {score:0,risk:'low'});
     if (peak.score >= 30) alerts.push({ clim, peak, scores });
@@ -1172,9 +1195,6 @@ function renderMeteo(loc, forecast) {
     </div>`;
   });
   html += `</div>`;
-
-  // Historique 6 jours
-  html += renderHistoryStrip(pastStats);
 
   // Section "Mes cultures"
   html += renderCulturesSection();
@@ -1317,7 +1337,8 @@ if (loadStoredLoc()) {
           const hasCF = mesCultures.size > 0;
           DATA.climat.forEach(clim => {
             if (hasCF && !clim.cultures.some(cu => mesCultures.has(cu))) return;
-            const scores = scoreMaladie(clim, stats); if (!scores) return;
+            const pressureBonus = computePressure(clim, pastStats);
+    const scores = scoreMaladie(clim, stats, pressureBonus); if (!scores) return;
             const peak = scores.reduce((m,s) => s.score>m.score?s:m, {score:0,risk:'low'});
             if (peak.risk === 'hi') nbHi++; else if (peak.risk === 'mid') nbMid++;
           });
