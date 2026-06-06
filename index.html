@@ -1143,7 +1143,7 @@ function toggleHistDetail(i) {
   html += `</div>`;
   const risquesWrap = document.getElementById('risques-loaded');
   if (risquesWrap) {
-    risquesWrap.innerHTML = html;
+    risquesWrap.innerHTML = '<p style="background:red;color:white;padding:8px">DEBUG html.length=' + html.length + '</p>' + html;
     risquesWrap.style.display = '';
     const rs = document.getElementById('risques-setup');
     if (rs) rs.style.display = 'none';
@@ -1271,7 +1271,7 @@ function renderMeteo(loc, forecast) {
 
   const risquesWrap = document.getElementById('risques-loaded');
   if (risquesWrap) {
-    risquesWrap.innerHTML = html;
+    risquesWrap.innerHTML = '<p style="background:red;color:white;padding:8px">DEBUG html.length=' + html.length + '</p>' + html;
     risquesWrap.style.display = '';
     const rs = document.getElementById('risques-setup');
     if (rs) rs.style.display = 'none';
