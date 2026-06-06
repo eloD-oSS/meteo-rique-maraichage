@@ -517,7 +517,7 @@ footer{text-align:center;padding:24px 18px 12px;font-size:10.5px;letter-spacing:
   <!-- RISQUES MALADIES -->
   <section class="view" id="view-risques" role="tabpanel" aria-labelledby="tab-risques" tabindex="0">
     <div id="risques-content">
-      <div id="risques-setup" class="meteo-setup">
+      <div id="risques-setup" class="meteo-setup" style="display:none">
         <h3>Localisation non configurée</h3>
         <p>Allez sur l'onglet Météo pour configurer votre localisation, puis revenez ici.</p>
         <button class="btn btn-primary" onclick="go('meteo')">🌤️ Configurer la localisation</button>
@@ -692,7 +692,7 @@ function go(view) {
   document.querySelectorAll('.view').forEach(v => v.classList.toggle('active', v.id === 'view-'+view));
   if (view === 'especes') showList();
   if (view === 'meteo') initMeteo();
-  if (view === 'risques') { if (currentLoc && currentForecast) renderMeteo(currentLoc, currentForecast); else { document.getElementById('risques-setup').style.display=''; document.getElementById('risques-loaded').style.display='none'; } }
+  if (view === 'risques') { const rl = document.getElementById('risques-loaded'); if (rl && rl.innerHTML.trim()) { rl.style.display=''; const rs=document.getElementById('risques-setup'); if(rs) rs.style.display='none'; } else if (currentLoc && currentForecast) renderMeteo(currentLoc, currentForecast); }
   window.scrollTo({top:0,behavior:'smooth'});
 }
 document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => go(t.dataset.view)));
@@ -942,6 +942,7 @@ async function showMeteoForLoc(loc) {
   const wrap = document.getElementById('meteo-loaded');
   wrap.style.display = '';
   wrap.innerHTML = `<div class="loader">Chargement des prévisions pour ${loc.name}</div>`;
+  const rl = document.getElementById('risques-loaded'); if(rl){ rl.innerHTML='<div class="loader">Chargement en cours…</div>'; rl.style.display=''; }
   try {
     const url = `https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&hourly=temperature_2m,relative_humidity_2m,precipitation&daily=temperature_2m_max,temperature_2m_min,relative_humidity_2m_max,relative_humidity_2m_min,precipitation_sum,precipitation_hours,weathercode&past_days=6&forecast_days=7&timezone=auto`;
     const r = await fetch(url);
@@ -952,6 +953,7 @@ async function showMeteoForLoc(loc) {
   } catch(e) {
     wrap.innerHTML = `<div class="error-box">${e.message}<br><br><button class="btn btn-ghost" onclick="initMeteo()">Réessayer</button></div>
       <div style="margin-top:14px"><button class="btn btn-ghost" onclick="resetLoc()">Changer de position</button></div>`;
+    const rlErr = document.getElementById('risques-loaded'); if(rlErr){ rlErr.innerHTML=`<div class="error-box">Impossible de charger les données météo.<br><button class="btn btn-ghost" onclick="initMeteo()">Réessayer</button></div>`; rlErr.style.display='é'; }
   }
 }
 
