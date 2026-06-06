@@ -1220,6 +1220,7 @@ function renderMeteo(loc, forecast) {
   // Section "Mes cultures"
   html += renderCulturesSection();
   wrap.innerHTML = html; html = '';
+  try {
 
   // Risques maladies
   let topClass = 'low', topMsg = hasCultureFilter
@@ -1269,7 +1270,13 @@ function renderMeteo(loc, forecast) {
     });
   }
 
-  const risquesWrap = document.getElementById('risques-loaded');
+  
+  } catch(err) {
+    const rlc = document.getElementById('risques-loaded');
+    if (rlc) { rlc.innerHTML = '<div class="error-box">ERREUR risques: ' + (err && err.message ? err.message : err) + '<br><br>' + (err && err.stack ? err.stack.replace(/</g,'&lt;').substring(0,400) : '') + '</div>'; rlc.style.display=''; }
+    return;
+  }
+const risquesWrap = document.getElementById('risques-loaded');
   if (risquesWrap) {
     risquesWrap.innerHTML = '<p style="background:red;color:white;padding:8px">DEBUG html.length=' + html.length + '</p>' + html;
     risquesWrap.style.display = '';
